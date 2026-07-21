@@ -1,0 +1,2 @@
+2026-07-20 20:42:45	GET	https://www.fss.or.kr/fss/bbs/B0000390/list.do params={'menuNo': '201193', 'pageIndex': 1}	('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
+2026-07-20 20:46:26	GET	https://www.fss.or.kr/fss/bbs/B0000390/list.do params={'menuNo': '201193', 'pageIndex': 1}	Failed to perform, curl: (56) Connection closed abruptly. See https://curl.se/libcurl/c/libcurl-errors.html first for more details.

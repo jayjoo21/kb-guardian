@@ -1,0 +1,7 @@
+.env
+.claude/
+logs_*.txt
+__pycache__/
+*.pyc
+.venv/
+venv/
