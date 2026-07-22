@@ -1,0 +1,52 @@
+{
+  "case_id": "64527",
+  "case_no": "제2009-93호",
+  "issues": [
+    {
+      "name": "설명의무_위반",
+      "result": "인정"
+    }
+  ],
+  "products": [
+    "ELS_DLS"
+  ],
+  "law_articles": [],
+  "precedents": [
+    "대법원 2003다51057"
+  ],
+  "referenced_cases": [],
+  "factors": [
+    {
+      "name": "투자경험_다수",
+      "direction": "감산",
+      "value_pp": null
+    },
+    {
+      "name": "신청인_주의소홀",
+      "direction": "감산",
+      "value_pp": null
+    },
+    {
+      "name": "고액투자자",
+      "direction": "감산",
+      "value_pp": null
+    }
+  ],
+  "outcomes": [
+    {
+      "respondent": "피신청인",
+      "result": "일부인용",
+      "ratio": 20,
+      "amount": 140305602
+    }
+  ],
+  "recommendation": null,
+  "summary": "신청인은 피신청인 담당직원의 권유로 약 14억원을 ELF에 투자하였으나, 담당직원이 Knock-In 조건을 포함한 만기손익구조를 정확히 설명하지 않았고 오해를 유발하는 상품안내문이 제공되어 손해 701,528,011원이 발생하였다. 위원회는 피신청인의 설명의무 위반을 인정하였으나, 신청인이 유사 ELF에 8회 투자한 경험이 있고 상품안내문 교부에도 불구하고 내용 확인을 소홀히 한 점을 들어 신청인 과실 80%를 인정하였다. 이에 피신청인은 손해액의 20%인 140,305,602원을 배상하라고 결정하였다.",
+  "keywords": [
+    "ELF",
+    "설명의무위반",
+    "Knock-In",
+    "만기손익구조",
+    "과실상계"
+  ]
+}
