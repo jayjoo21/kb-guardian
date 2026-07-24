@@ -1,0 +1,104 @@
+.canvas {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-5);
+}
+
+.mock {
+  width: min(100%, 420px);
+  height: auto;
+}
+
+.edge {
+  stroke: var(--hairline-strong);
+  stroke-width: 1;
+}
+
+.nodeCaseActive {
+  fill: var(--kb-yellow);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+
+.nodeIssue {
+  fill: var(--canvas);
+  stroke: var(--kb-yellow);
+  stroke-width: 2;
+}
+
+.nodeLaw {
+  fill: var(--canvas);
+  stroke: var(--slate);
+  stroke-width: 1.5;
+}
+
+.nodeSimilar {
+  fill: var(--paper);
+  stroke: var(--slate);
+  stroke-width: 1;
+}
+
+.caption {
+  font-size: 13px;
+  color: var(--ink-faint);
+  text-align: center;
+}
+
+.legend {
+  list-style: none;
+  display: flex;
+  gap: var(--space-4);
+  padding: 0;
+  margin: 0;
+  font-size: 12px;
+  color: var(--slate);
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.swatch {
+  width: 10px;
+  height: 10px;
+  display: inline-block;
+  flex: none;
+}
+
+.swCase {
+  border-radius: 50%;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+}
+
+.swIssue {
+  border-radius: 50%;
+  background: var(--canvas);
+  border: 2px solid var(--kb-yellow);
+}
+
+.swLaw {
+  border-radius: var(--radius-sm);
+  background: var(--canvas);
+  border: 1.5px solid var(--slate);
+}
+
+@media (max-width: 880px) {
+  .canvas {
+    padding: var(--space-4);
+    gap: var(--space-3);
+  }
+
+  .legend {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3);
+  }
+}

@@ -1,0 +1,13 @@
+.wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper);
+}
+
+.text {
+  font-size: 14px;
+  color: var(--slate);
+}

@@ -40,6 +40,9 @@ from pathlib import Path
 import anthropic
 from dotenv import load_dotenv
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from common.enums import ISSUE_ENUM, PRODUCT_ENUM, FACTOR_ENUM  # noqa: E402
+
 load_dotenv()
 
 # Windows 콘솔(cp949 등)에서 이모지/특수문자 출력 시 UnicodeEncodeError 방지
@@ -79,21 +82,6 @@ EST_OUTPUT_TOKENS_PER_CASE = 700
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("extract_graph")
-
-ISSUE_ENUM = [
-    "설명의무_위반", "적합성원칙_위반", "적정성원칙_위반", "부당권유",
-    "불완전판매_기타", "우대금리_미적용", "중도해지_불이익", "금리인하요구권",
-    "임의처리_무단거래", "착오송금", "전산장애", "보이스피싱_피해보상",
-    "담보_보증분쟁", "예금지급_분쟁", "수수료_비용분쟁", "약관해석_분쟁", "기타",
-]
-PRODUCT_ENUM = [
-    "예적금", "대출", "펀드", "ELS_DLS", "신탁",
-    "방카슈랑스", "카드", "외환", "퇴직연금", "CP_채권", "기타",
-]
-FACTOR_ENUM = [
-    "고령자", "금융취약계층", "예적금목적_방문", "최초투자", "투자경험_다수",
-    "고액투자자", "전문투자자", "서류_자필미기재", "모니터링콜_부실", "신청인_주의소홀", "기타",
-]
 
 SCHEMA_JSON = """{
   "case_id": "...",

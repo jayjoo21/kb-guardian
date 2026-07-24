@@ -1,0 +1,54 @@
+/* 디자인 토큰 — 라이트모드 고정. 이 파일의 값만 유일한 출처로 취급하고
+   컴포넌트 CSS에서 색/폰트를 직접 하드코딩하지 않는다. */
+:root {
+  /* 색 */
+  --paper: #faf9f6;      /* 앱 배경 */
+  --canvas: #f2f0ea;     /* 그래프 캔버스 — 앱 배경보다 살짝 톤다운 */
+  --ink: #1a1d29;        /* 텍스트·노드 테두리·헤어라인 */
+  --kb-yellow: #ffcc00;  /* 활성 노드 채움·근거 강조·로고 — 강조 전용, 배경 금지 */
+  --slate: #6b7280;      /* 비활성 노드·보조 텍스트 */
+  --link-blue: #2c43d8;  /* 문장↔노드 연결선, 호버 시에만 */
+
+  /* 파생 톤 — hairline/보조 배경. 원색 그대로 큰 면적에 쓰지 않기 위한 저채도 변형 */
+  --hairline: rgba(26, 29, 41, 0.12);
+  --hairline-strong: rgba(26, 29, 41, 0.22);
+  --ink-faint: rgba(26, 29, 41, 0.55);
+  --slate-faint: rgba(107, 114, 128, 0.35);
+  --kb-yellow-soft: rgba(255, 204, 0, 0.16);
+  --link-blue-soft: rgba(44, 67, 216, 0.12);
+
+  /* 타입 */
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-body: 'Pretendard Variable', Pretendard, -apple-system, 'Malgun Gothic', sans-serif;
+
+  /* 형태 */
+  --radius: 4px;
+  --radius-sm: 2px;
+
+  /* 간격 스케일 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* 레이아웃 */
+  --header-h: 56px;
+  --footer-h: auto;
+
+  /* 모션 */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 120ms;
+  --dur-base: 220ms;
+  --dur-slow: 420ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+  }
+}

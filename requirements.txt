@@ -3,3 +3,5 @@ beautifulsoup4
 anthropic
 python-dotenv
 neo4j
+fastapi
+uvicorn

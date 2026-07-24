@@ -79,6 +79,16 @@ ISSUE_LAW_MAP = {
     "부당권유": "금융소비자보호법 제21조",
 }
 
+# Criteria(분쟁해결기준) -> Issue 사람이 직접 확인한 매핑. data/parsed/criteria/{id}.json 의
+# id 기준. 20건 중 9번(금융투자/손실보전약정을 통한 부당권유행위)만 1차 스코프(은행·금투)
+# Issue enum과 명확히 매칭되어 매핑한다. 나머지 19건은 보험 상품의 보험금 지급/면책약관
+# 해석 분쟁이라 현재 ISSUE_ENUM(설명의무_위반 등 은행·금투 불완전판매 체계)과 억지로
+# 매칭하면 오히려 오탐 근거가 되므로 의도적으로 비워둔다(data/SCOPE.md 참조, 보험 코퍼스
+# 확장 시 재검토).
+CRITERIA_ISSUE_MAP = {
+    9: ["부당권유"],
+}
+
 CASE_NO_TOKEN_RE = re.compile(r"제\s*\d+\s*-\s*\d+\s*호")
 
 
@@ -306,6 +316,30 @@ def apply_governed_by(driver) -> None:
     logger.info("GOVERNED_BY 정적 매핑 %d건 적용", len(mappings))
 
 
+def apply_criteria_applies_to(driver) -> int:
+    """CRITERIA_ISSUE_MAP 기준으로 (Criteria)-[:APPLIES_TO]->(Issue) 엣지를 만든다.
+    매핑에 없는 Criteria(현재 19건, 보험)는 노드로만 남고 엣지가 생기지 않는다."""
+    mappings = [
+        {"criteria_id": str(cid), "issue": issue}
+        for cid, issues in CRITERIA_ISSUE_MAP.items()
+        for issue in issues
+    ]
+    if not mappings:
+        return 0
+    driver.execute_query(
+        """
+        UNWIND $mappings AS m
+        MATCH (c:Criteria {id: m.criteria_id})
+        MERGE (i:Issue {name: m.issue})
+        MERGE (c)-[:APPLIES_TO]->(i)
+        """,
+        {"mappings": mappings},
+        database_=NEO4J_DATABASE,
+    )
+    logger.info("APPLIES_TO 매핑 %d건 적용", len(mappings))
+    return len(mappings)
+
+
 # ---------------------------------------------------------------------------
 # 검증 리포트
 # ---------------------------------------------------------------------------
@@ -443,6 +477,7 @@ def main() -> None:
         referenced_map = load_cases(driver)
         resolved, unresolved = resolve_refers_to(driver, referenced_map)
         apply_governed_by(driver)
+        apply_criteria_applies_to(driver)
         logger.info("REFERS_TO 매칭: 성공 %d / 실패(unresolved) %d", resolved, unresolved)
 
         print_report(driver)
