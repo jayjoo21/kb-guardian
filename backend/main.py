@@ -21,9 +21,11 @@ from neo4j import GraphDatabase
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from backend.schemas import (  # noqa: E402
     Classified, ConsultRequest, ConsultResponse, CriteriaRef, Evidence,
-    GraphNeighborhood, CaseDetail, LawArticleRef, RatioStats, SimilarCase, StatsResponse,
+    GraphNeighborhood, CaseDetail, LawArticleRef, Procedure, RatioDistribution, RatioStats,
+    SimilarCase, SimulateFactorOption, SimulateResponse, StatsResponse,
 )
-from backend.services import answerer, classifier, graph_search  # noqa: E402
+from backend.services import answerer, classifier, graph_search, simulator  # noqa: E402
+from common.enums import ISSUE_ENUM  # noqa: E402
 
 load_dotenv()
 
@@ -51,6 +53,38 @@ PROCEDURE_STEPS = [
     "6. 위원회가 조정안을 제시하고, 양 당사자가 이를 수락하면 재판상 화해와 동일한 효력을 가집니다.",
     "7. 조정이 성립하지 않으면 소송 등 별도 법적 절차를 검토할 수 있습니다.",
 ]
+
+# 쟁점 유형별 제출 서류. 그래프에 없는 실무 지식이므로 절차와 마찬가지로 정적 데이터로 시작하되,
+# "제출 서류 안내"를 뭉뚱그리지 말라는 요구 때문에 쟁점별로 구체화한다(주제 설명문 원문 요구사항).
+DOCUMENT_MAP: dict[str, list[str]] = {
+    "설명의무_위반": ["가입신청서(계약서) 사본", "상품설명서", "투자자정보확인서", "상담 녹취록(있는 경우)"],
+    "적합성원칙_위반": ["가입신청서(계약서) 사본", "투자자정보확인서", "상품설명서", "상담 녹취록(있는 경우)"],
+    "적정성원칙_위반": ["가입신청서(계약서) 사본", "투자자정보확인서", "상품설명서"],
+    "부당권유": ["가입신청서(계약서) 사본", "상담 녹취록(있는 경우)", "손실보전각서 등 관련 서면(있는 경우)"],
+    "불완전판매_기타": ["가입신청서(계약서) 사본", "상품설명서", "투자자정보확인서"],
+    "우대금리_미적용": ["가입신청서", "상품설명서(우대금리 조건 명시분)", "통장 거래내역"],
+    "중도해지_불이익": ["예적금 가입신청서", "상품설명서", "중도해지 정산내역서"],
+    "금리인하요구권": ["금리인하요구권 신청서", "소득·재산 증빙자료", "금리 산정내역서"],
+    "임의처리_무단거래": ["계좌·카드 거래내역서", "본인 미승인 확인서(이의제기서)", "고객센터 접수증"],
+    "착오송금": ["송금 이체확인증", "수취인 정보(확인 가능한 범위)", "반환 요청 접수 내역"],
+    "전산장애": ["장애 발생 시각 화면 캡처·로그", "거래 실패 내역", "고객센터 문의 이력"],
+    "보이스피싱_피해보상": ["사건사고사실확인원(경찰 신고접수증)", "이체내역서", "피해구제 신청서"],
+    "담보_보증분쟁": ["대출 약정서", "담보·보증 계약서", "등기사항증명서(해당 시)"],
+    "예금지급_분쟁": ["예금통장·증서 사본", "본인확인서류", "거래내역서"],
+    "수수료_비용분쟁": ["수수료 부과 내역서", "상품설명서(수수료 조항)", "거래내역서"],
+    "약관해석_분쟁": ["약관 사본(해당 조항 표시)", "가입신청서", "관련 상담·안내 이력"],
+    "기타": ["가입신청서(계약서) 사본", "상품설명서", "관련 상담 이력 또는 녹취(있는 경우)"],
+}
+
+
+def build_documents(issues: list) -> list:
+    seen, docs = set(), []
+    for issue in issues or ["기타"]:
+        for doc in DOCUMENT_MAP.get(issue, DOCUMENT_MAP["기타"]):
+            if doc not in seen:
+                seen.add(doc)
+                docs.append(doc)
+    return docs[:6]
 
 
 @asynccontextmanager
@@ -105,7 +139,8 @@ async def _consult_stream(req: ConsultRequest, driver, sync_client, async_client
 
     evidence = await _gather_evidence(driver, classified["issues"], classified["products"])
     yield _sse("evidence", evidence)
-    yield _sse("procedure", PROCEDURE_STEPS)
+    procedure = {"steps": PROCEDURE_STEPS, "documents": build_documents(classified["issues"])}
+    yield _sse("procedure", procedure)
     t2 = time.perf_counter()
 
     chunks = []
@@ -170,7 +205,30 @@ async def consult_sync(req: ConsultRequest):
             ratio_stats=RatioStats(**evidence["ratio_stats"]),
             criteria=[CriteriaRef(**c) for c in evidence["criteria"]],
         ),
-        procedure=PROCEDURE_STEPS,
+        procedure=Procedure(steps=PROCEDURE_STEPS, documents=build_documents(classified["issues"])),
+    )
+
+
+@app.get("/api/simulate/{issue}", response_model=SimulateResponse)
+async def simulate(issue: str):
+    """쟁점별 배상비율 분포(중앙값/범위/사분위/개별값/일관성)와, 표본이 충분해 신뢰할 수 있는
+    ("반영" 등급) 가감산 요인만 참고 정보로 반환한다. 계산기가 아니라 분포 조회이므로 요인을
+    선택·합산하지 않는다. 표본이 없는 쟁점은 그래프에 없는 것으로 보고 빈 결과를 반환한다."""
+    if issue not in ISSUE_ENUM:
+        raise HTTPException(status_code=400, detail=f"issue={issue!r}는 유효한 쟁점이 아닙니다")
+
+    driver = app.state.driver
+    distribution, stats = await asyncio.gather(
+        asyncio.to_thread(graph_search.ratio_distribution_for_issue, driver, NEO4J_DATABASE, issue),
+        asyncio.to_thread(graph_search.factor_stats_for_issue, driver, NEO4J_DATABASE, issue, simulator.FACTOR_MENU),
+    )
+    graded = simulator.classify_confidence(issue, stats["factors"])
+    reflected = [f for f in graded if f["confidence"] == simulator.TIER_REFLECTED]
+
+    return SimulateResponse(
+        issue=issue,
+        distribution=RatioDistribution(**distribution),
+        factors=[SimulateFactorOption(**f) for f in reflected],
     )
 
 

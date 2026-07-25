@@ -27,7 +27,6 @@ function App() {
       <Header activeTab={activeTab} onTabChange={setActiveTab} />
       <main className={styles.main}>
         {activeTab === 'consult' && <ConsultView />}
-        {activeTab === 'graph' && <PlaceholderView label="그래프" />}
         {activeTab === 'stats' && <PlaceholderView label="통계" />}
       </main>
       <Footer />

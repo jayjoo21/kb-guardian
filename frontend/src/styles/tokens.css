@@ -4,6 +4,9 @@
   /* 색 */
   --paper: #faf9f6;      /* 앱 배경 */
   --canvas: #f2f0ea;     /* 그래프 캔버스 — 앱 배경보다 살짝 톤다운 */
+  --card: #f7f5f0;       /* 카드형 섹션(입력창, 통계 블록 등) — 경계선 대신 톤 차이로 구분 */
+  --surface: #ffffff;    /* RESULT 카드(답변/근거) 배경 — 페이지 배경보다 밝게 떠서 카드임을 알림 */
+  --card-border: #eae8e2; /* 카드 헤어라인 테두리 */
   --ink: #1a1d29;        /* 텍스트·노드 테두리·헤어라인 */
   --kb-yellow: #ffcc00;  /* 활성 노드 채움·근거 강조·로고 — 강조 전용, 배경 금지 */
   --slate: #6b7280;      /* 비활성 노드·보조 텍스트 */
@@ -24,15 +27,16 @@
   /* 형태 */
   --radius: 4px;
   --radius-sm: 2px;
+  --radius-lg: 8px;      /* RESULT 카드 전용 */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04);
 
-  /* 간격 스케일 */
+  /* 여백 리듬 — 8px 그리드, 이 4개 값만 쓴다(밀접 요소/요소 간/카드 내부/섹션 간).
+     --space-1(4px)은 타이포 미세조정 등 리듬과 무관한 예외적 상황에만 남겨둔다. */
   --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 24px;
-  --space-6: 32px;
-  --space-7: 48px;
+  --space-tight: 8px;    /* 밀접 요소(아이콘+라벨, 칩 내부 등) */
+  --space-element: 16px; /* 요소 간(폼 필드, 문단, 리스트 항목) */
+  --space-card: 24px;    /* 카드 내부 패딩 */
+  --space-section: 40px; /* 섹션 간 */
 
   /* 레이아웃 */
   --header-h: 56px;

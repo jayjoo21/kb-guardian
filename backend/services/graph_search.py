@@ -45,7 +45,40 @@ _QUERY_RATIO_STATS = """
 MATCH (c:Case)-[:HAS_ISSUE]->(i:Issue) WHERE i.name IN $issues
 MATCH (c)-[ho:HAS_OUTCOME]->(:Respondent) WHERE ho.ratio IS NOT NULL
 RETURN min(ho.ratio) AS min, percentileDisc(ho.ratio, 0.5) AS median,
-       max(ho.ratio) AS max, count(ho.ratio) AS n
+       max(ho.ratio) AS max, avg(ho.ratio) AS avg, count(ho.ratio) AS n
+"""
+
+# 요인별 가산/감산 기여도: HAS_FACTOR.value_pp는 결측이 많고(예: 최초투자 15건 중 0건에 값 있음)
+# 일부는 의미 자체가 다르다(신청인_주의소홀의 값 5건을 실제 outcome.ratio와 대조하면 "감산 pp"가
+# 아니라 그 사례의 소비자 과실비율 자체였음 - 예: ratio=30인 사례에 value_pp=70).
+# 그래서 value_pp를 신뢰하는 대신, 쟁점 내에서 해당 요인이 "있는 사례군"과 "없는 사례군"의
+# 실측 배상비율 평균 차이를 pp로 쓴다. 표본이 거의 없는 요인(n_with=0)은 이 쟁점에서 아예
+# 근거가 없다는 뜻이므로 제외한다(억지 매칭 금지 원칙과 동일).
+_QUERY_FACTOR_STATS = """
+MATCH (c:Case)-[:HAS_ISSUE]->(i:Issue {name: $issue})
+MATCH (c)-[ho:HAS_OUTCOME]->(:Respondent) WHERE ho.ratio IS NOT NULL
+WITH c, ho.ratio AS ratio
+OPTIONAL MATCH (c)-[:HAS_FACTOR]->(f:Factor)
+WITH c, ratio, collect(DISTINCT f.name) AS present
+UNWIND $factor_names AS factor
+WITH factor, ratio, (factor IN present) AS has_it
+WITH factor,
+     sum(CASE WHEN has_it THEN 1 ELSE 0 END) AS n_with,
+     avg(CASE WHEN has_it THEN ratio END) AS avg_with,
+     sum(CASE WHEN NOT has_it THEN 1 ELSE 0 END) AS n_without,
+     avg(CASE WHEN NOT has_it THEN ratio END) AS avg_without
+WHERE n_with > 0
+RETURN factor, n_with, avg_with, n_without, avg_without
+ORDER BY factor
+"""
+
+_QUERY_RATIO_DISTRIBUTION = """
+MATCH (c:Case)-[:HAS_ISSUE]->(i:Issue {name: $issue})
+MATCH (c)-[ho:HAS_OUTCOME]->(:Respondent) WHERE ho.ratio IS NOT NULL
+WITH ho.ratio AS ratio
+RETURN collect(ratio) AS values, min(ratio) AS min, max(ratio) AS max, avg(ratio) AS avg,
+       percentileDisc(ratio, 0.25) AS p25, percentileDisc(ratio, 0.5) AS median,
+       percentileDisc(ratio, 0.75) AS p75, count(ratio) AS n
 """
 
 _QUERY_LAW_ARTICLES = """
@@ -90,12 +123,70 @@ def find_similar_cases(driver, database: str, issues: list, products: list, limi
 
 def ratio_stats_for_issues(driver, database: str, issues: list) -> dict:
     if not issues:
-        return {"min": None, "median": None, "max": None, "n": 0}
+        return {"min": None, "median": None, "max": None, "avg": None, "n": 0}
     records, _, _ = driver.execute_query(
         _QUERY_RATIO_STATS, {"issues": issues}, database_=database, routing_=RoutingControl.READ,
     )
     r = records[0]
-    return {"min": r["min"], "median": r["median"], "max": r["max"], "n": r["n"]}
+    return {"min": r["min"], "median": r["median"], "max": r["max"], "avg": r["avg"], "n": r["n"]}
+
+
+# 쟁점 판단이 사안마다 얼마나 들쭉날쭉한지의 기준. n<5는 판단 자체를 유보(표본 부족),
+# IQR(25~75%p 폭)이 20%p 이하면 "일관", 넘으면 "편차 큼". 실측 분포로 캘리브레이션한 값
+# (n>=19인 쟁점 5개 중 IQR 16~35 분포, 20을 경계로 좁은 쪽/넓은 쪽이 자연스럽게 갈림).
+_CONSISTENCY_MIN_N = 5
+_CONSISTENCY_IQR_THRESHOLD = 20
+
+
+def ratio_distribution_for_issue(driver, database: str, issue: str) -> dict:
+    """단일 쟁점의 배상비율 분포(중앙값/범위/사분위/개별값)와 일관성 라벨을 반환한다.
+    values는 히스토그램 렌더링용 실측 배상비율 목록이며, 그래프에서 조회한 값 그대로다."""
+    records, _, _ = driver.execute_query(
+        _QUERY_RATIO_DISTRIBUTION, {"issue": issue}, database_=database, routing_=RoutingControl.READ,
+    )
+    r = records[0]
+    n = r["n"]
+    if n == 0:
+        return {
+            "min": None, "median": None, "max": None, "avg": None,
+            "p25": None, "p75": None, "n": 0, "values": [], "consistency": "데이터_부족",
+        }
+
+    if n < _CONSISTENCY_MIN_N:
+        consistency = "데이터_부족"
+    else:
+        iqr = r["p75"] - r["p25"]
+        consistency = "일관" if iqr <= _CONSISTENCY_IQR_THRESHOLD else "편차_큼"
+
+    return {
+        "min": r["min"], "median": r["median"], "max": r["max"], "avg": r["avg"],
+        "p25": r["p25"], "p75": r["p75"], "n": n,
+        "values": sorted(r["values"]), "consistency": consistency,
+    }
+
+
+def factor_stats_for_issue(driver, database: str, issue: str, factor_names: list) -> dict:
+    """단일 쟁점의 기본 배상비율 통계 + 요인별(있음 vs 없음) 실측 평균 차이(pp)를 반환한다.
+    이 쟁점에 해당하는 사례가 없으면 base.n=0, factors=[]로 빈 결과를 반환한다."""
+    base = ratio_stats_for_issues(driver, database, [issue])
+    if base["n"] == 0:
+        return {"base": base, "factors": []}
+
+    records, _, _ = driver.execute_query(
+        _QUERY_FACTOR_STATS,
+        {"issue": issue, "factor_names": factor_names},
+        database_=database, routing_=RoutingControl.READ,
+    )
+    factors = []
+    for r in records:
+        avg_with, avg_without = r["avg_with"], r["avg_without"]
+        pp = round(avg_with - avg_without, 1) + 0.0 if avg_with is not None and avg_without is not None else None
+        direction = "중립" if pp is None or pp == 0 else ("가산" if pp > 0 else "감산")
+        factors.append({
+            "name": r["factor"], "direction": direction, "pp": pp,
+            "n_with": r["n_with"], "n_without": r["n_without"],
+        })
+    return {"base": base, "factors": factors}
 
 
 def law_articles_for_issues(driver, database: str, issues: list) -> list:

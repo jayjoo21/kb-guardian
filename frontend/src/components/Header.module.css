@@ -1,17 +1,32 @@
 .header {
   height: var(--header-h);
   flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 var(--space-5);
   background: var(--paper);
   border-bottom: 1px solid var(--hairline);
 }
 
+.inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-tight);
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
 .tabs {
   display: flex;
-  gap: var(--space-1);
+  gap: var(--space-element);
 }
 
 .tab {
@@ -19,9 +34,9 @@
   background: none;
   border: none;
   border-bottom: 1.5px solid transparent;
-  padding: var(--space-2) var(--space-1);
-  font-size: 14px;
-  font-weight: 500;
+  padding: var(--space-tight);
+  font-size: 13.5px;
+  font-weight: 400;
   color: var(--slate);
   transition: color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 }
@@ -32,11 +47,5 @@
 
 .tab[aria-current='page'] {
   color: var(--ink);
-  border-bottom-color: var(--kb-yellow);
-}
-
-@media (max-width: 560px) {
-  .header {
-    padding: 0 var(--space-3);
-  }
+  border-bottom-color: var(--ink);
 }

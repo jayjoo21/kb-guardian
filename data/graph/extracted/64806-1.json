@@ -64,6 +64,11 @@
       "name": "고액투자자",
       "direction": "감산",
       "value_pp": 3
+    },
+    {
+      "name": "금융취약계층",
+      "direction": "가산",
+      "value_pp": null
     }
   ],
   "outcomes": [

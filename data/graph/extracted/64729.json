@@ -39,6 +39,11 @@
       "name": "신청인_주의소홀",
       "direction": "감산",
       "value_pp": null
+    },
+    {
+      "name": "금융취약계층",
+      "direction": "가산",
+      "value_pp": null
     }
   ],
   "outcomes": [

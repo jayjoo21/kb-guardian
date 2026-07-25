@@ -89,6 +89,11 @@
       "name": "서류_자필미기재",
       "direction": "감산",
       "value_pp": 5
+    },
+    {
+      "name": "금융취약계층",
+      "direction": "가산",
+      "value_pp": null
     }
   ],
   "outcomes": [

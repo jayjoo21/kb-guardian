@@ -1,29 +1,5 @@
-.split {
+.view {
   flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-}
-
-.canvasPane {
-  min-height: 0;
-  background: var(--canvas);
-  border-right: 1px solid var(--hairline);
-}
-
-.answerPane {
-  min-height: 0;
-  background: var(--paper);
-}
-
-@media (max-width: 880px) {
-  .split {
-    grid-template-columns: 1fr;
-    grid-template-rows: 40vh minmax(0, 1fr);
-  }
-
-  .canvasPane {
-    border-right: none;
-    border-bottom: 1px solid var(--hairline);
-  }
+  display: flex;
+  flex-direction: column;
 }

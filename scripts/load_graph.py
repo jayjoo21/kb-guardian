@@ -258,6 +258,23 @@ def load_cases(driver) -> dict:
     return referenced_map
 
 
+def load_specific_cases(driver, case_ids: list) -> int:
+    """지정한 case_id만 CASE_UPSERT_QUERY로 재적재한다(MERGE라 다른 case에는 영향 없음).
+    수동으로 확정한 factor 등을 전체 --reset 없이 반영할 때 쓴다."""
+    loaded = 0
+    for case_id in case_ids:
+        path = DATA_EXTRACTED / f"{case_id}.json"
+        if not path.exists():
+            logger.warning("case %s: data/graph/extracted/에 없음, 건너뜀", case_id)
+            continue
+        props = load_case_props(case_id)
+        props.pop("referenced_cases")
+        driver.execute_query(CASE_UPSERT_QUERY, props, database_=NEO4J_DATABASE)
+        loaded += 1
+    logger.info("부분 재적재: 대상 %d건 중 %d건 완료", len(case_ids), loaded)
+    return loaded
+
+
 def build_case_no_index(driver) -> dict:
     records, _, _ = driver.execute_query(
         "MATCH (c:Case) WHERE c.case_no IS NOT NULL RETURN c.id AS id, c.case_no AS case_no",
@@ -448,6 +465,11 @@ def main() -> None:
         help="쉼표로 구분된 case_id의 Case 노드와 관계만 삭제하고 종료 (예: 다중결정 분리 후 "
         "원본 병합 Case 제거, 스코프 제외건 수동 정리)",
     )
+    parser.add_argument(
+        "--case-ids",
+        help="쉼표로 구분된 case_id만 CASE_UPSERT_QUERY로 재적재하고 종료 (전체 --reset 없이 "
+        "수동 확정한 factor 등을 반영할 때 사용)",
+    )
     args = parser.parse_args()
 
     driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USERNAME, NEO4J_PASSWORD))
@@ -459,6 +481,11 @@ def main() -> None:
             ids = [x.strip() for x in args.purge_ids.split(",") if x.strip()]
             deleted = purge_cases(driver, ids)
             logger.info("purge: 대상 %d건 중 %d건 삭제됨", len(ids), deleted)
+            return
+
+        if args.case_ids:
+            ids = [x.strip() for x in args.case_ids.split(",") if x.strip()]
+            load_specific_cases(driver, ids)
             return
 
         if args.report_only:

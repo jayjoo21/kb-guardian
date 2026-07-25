@@ -58,6 +58,11 @@
       "name": "기타",
       "direction": "가산",
       "value_pp": 5
+    },
+    {
+      "name": "금융취약계층",
+      "direction": "가산",
+      "value_pp": null
     }
   ],
   "outcomes": [

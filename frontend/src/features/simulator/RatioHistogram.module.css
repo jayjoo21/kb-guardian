@@ -1,0 +1,60 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1); /* 막대-축 라벨 간 미세 간격. 여백 리듬(8/16/24/40) 대상이 아닌
+                           차트 렌더링 디테일이라 --space-1(4px) 예외로 둔다 */
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 64px;
+}
+
+.bar {
+  flex: 1;
+  min-height: 2px;
+  background: var(--slate-faint);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  cursor: default;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.bar:hover {
+  background: var(--ink-faint);
+}
+
+.barMedian {
+  background: var(--kb-yellow);
+}
+
+.barMedian:hover {
+  background: var(--kb-yellow);
+}
+
+.count {
+  position: absolute;
+  top: -14px;
+  font-size: 9px;
+  color: var(--slate);
+}
+
+.axis {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--slate);
+}
+
+.srTable {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

@@ -44,6 +44,11 @@
       "name": "투자경험_다수",
       "direction": "가산",
       "value_pp": null
+    },
+    {
+      "name": "금융취약계층",
+      "direction": "가산",
+      "value_pp": null
     }
   ],
   "outcomes": [

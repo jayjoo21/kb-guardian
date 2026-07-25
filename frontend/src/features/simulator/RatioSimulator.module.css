@@ -1,0 +1,174 @@
+.simulator {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-card);
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-element);
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--slate);
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+.betaNote {
+  font-size: 11px;
+  color: var(--slate);
+}
+
+.issueField {
+  display: flex;
+  align-items: center;
+  gap: var(--space-tight);
+}
+
+.issueLabel {
+  font-size: 12px;
+  color: var(--slate);
+  flex: none;
+}
+
+.issueSelect {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-tight) var(--space-element);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.headline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-element);
+  padding: var(--space-element);
+  background: var(--card);
+  border-radius: var(--radius);
+}
+
+.headlineMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.headlineLabel {
+  font-size: 11px;
+  color: var(--slate);
+}
+
+.headlineValue {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.1;
+}
+
+.statGrid {
+  display: flex;
+  gap: var(--space-card);
+  margin: 0;
+}
+
+.statGrid dt {
+  font-size: 10px;
+  color: var(--slate);
+}
+
+.statGrid dd {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.consistencyNote {
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin: 0;
+}
+
+.factorSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+  padding-top: var(--space-element);
+  border-top: 1px solid var(--hairline);
+}
+
+.factorSectionTitle {
+  font-size: 11px;
+  color: var(--slate);
+}
+
+.factorList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+}
+
+.factorRow {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-tight);
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.factorName {
+  flex: 1;
+  min-width: 0;
+}
+
+.factorPp {
+  font-size: 13px;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.factorN {
+  font-size: 13px;
+  color: var(--slate);
+}
+
+.noFactors,
+.loading {
+  font-size: 12px;
+  color: var(--slate);
+  margin: 0;
+}
+
+.error {
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--kb-yellow-soft);
+  padding: var(--space-tight) var(--space-element);
+  border-radius: var(--radius);
+  margin: 0;
+}
+
+@media (max-width: 880px) {
+  .headline {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .statGrid {
+    gap: var(--space-element);
+  }
+}

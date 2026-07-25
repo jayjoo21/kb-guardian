@@ -6,25 +6,23 @@ interface LogoProps {
   size?: number
 }
 
-/** 옐로 마크 — 그래프의 "활성 노드"와 같은 조형(채움+잉크 테두리)을 브랜드 마크로 재사용 */
+// frontend/public/에 있는 실제 로고 파일. webp를 우선 쓰고, 브라우저가 webp를
+// 지원하지 않으면 <picture>가 자동으로 png로 대체한다(별도 JS 분기 불필요).
+const LOGO_WEBP = '/KB_logo.svg.webp'
+const LOGO_PNG = '/kb_logo.png'
+
+/** 브랜드 마크. 실제 로고 이미지(webp, png 폴백)를 쓴다. */
 export function LogoMark({ ignite = false, size = 20 }: LogoProps) {
   return (
-    <span
-      className={`${styles.mark} ${ignite ? styles.ignite : ''}`}
-      style={{ width: size, height: size }}
-      aria-hidden="true"
-    />
-  )
-}
-
-export function Logo({ ignite = false }: { ignite?: boolean }) {
-  return (
-    <div className={styles.lockup}>
-      <LogoMark ignite={ignite} />
-      <span className={styles.wordmark}>
-        KB Guardian
-        <span className={styles.tagline}>금융분쟁 근거 탐색</span>
-      </span>
-    </div>
+    <picture>
+      <source srcSet={LOGO_WEBP} type="image/webp" />
+      <img
+        src={LOGO_PNG}
+        alt=""
+        aria-hidden="true"
+        className={ignite ? styles.ignite : undefined}
+        style={{ width: size, height: size, objectFit: 'contain' }}
+      />
+    </picture>
   )
 }
