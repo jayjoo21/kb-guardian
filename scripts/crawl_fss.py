@@ -39,6 +39,8 @@ DECISIONS_LIST_URL = f"{BASE_URL}/fss/bbs/B0000390/list.do"
 DECISIONS_MENU_NO = "201193"
 CRITERIA_LIST_URL = f"{BASE_URL}/fss/job/fncCnflPrcdnt/list.do"
 CRITERIA_MENU_NO = "201194"
+MAIN_PRECEDENTS_LIST_URL = f"{BASE_URL}/fss/job/fncCnflMainPrcdnt/list.do"
+MAIN_PRECEDENTS_MENU_NO = "201196"
 
 REQUEST_DELAY_SEC = 1.5
 MAX_RETRIES = 3
@@ -48,6 +50,7 @@ ALLOWED_ATTACHMENT_EXTS = {".hwp", ".hwpx", ".pdf"}
 DATA_ROOT = Path("data/raw")
 DECISIONS_DIR = DATA_ROOT / "decisions"
 CRITERIA_DIR = DATA_ROOT / "criteria"
+MAIN_PRECEDENTS_DIR = DATA_ROOT / "main_precedents"
 FAILURES_LOG = Path("data/failed/failures.log")
 
 SIZE_PAREN_RE = re.compile(r"\(파일크기\s*[:：]\s*[^)]*\)")
@@ -169,7 +172,10 @@ def parse_decision_list(soup: BeautifulSoup) -> list[dict]:
     return items
 
 
-def parse_criteria_list(soup: BeautifulSoup) -> list[dict]:
+def _parse_prcdnt_style_list(soup: BeautifulSoup, base_url: str) -> list[dict]:
+    """분쟁해결기준/주요판례 게시판 공용 파서(둘 다 prcdntSlno 파라미터를 쓰는 동일 템플릿).
+    urljoin의 base를 호출자가 넘겨야 한다 — 게시판마다 상세페이지 경로(fncCnflPrcdnt vs
+    fncCnflMainPrcdnt)가 다르므로 base를 고정하면 다른 게시판 URL로 잘못 resolve된다."""
     rows = soup.select("div.bd-list table tbody tr")
     items = []
     for tr in rows:
@@ -179,7 +185,7 @@ def parse_criteria_list(soup: BeautifulSoup) -> list[dict]:
         title_a = tds[3].find("a")
         if title_a is None or not title_a.get("href"):
             continue
-        href = urljoin(CRITERIA_LIST_URL, title_a["href"])
+        href = urljoin(base_url, title_a["href"])
         slno = parse_qs(urlparse(href).query).get("prcdntSlno", [None])[0]
         if not slno:
             continue
@@ -194,6 +200,14 @@ def parse_criteria_list(soup: BeautifulSoup) -> list[dict]:
             "detail_url": href,
         })
     return items
+
+
+def parse_criteria_list(soup: BeautifulSoup) -> list[dict]:
+    return _parse_prcdnt_style_list(soup, CRITERIA_LIST_URL)
+
+
+def parse_main_precedents_list(soup: BeautifulSoup) -> list[dict]:
+    return _parse_prcdnt_style_list(soup, MAIN_PRECEDENTS_LIST_URL)
 
 
 def load_processed_ids(metadata_path: Path) -> set:
@@ -309,7 +323,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="금감원 분쟁조정결정례/분쟁해결기준 크롤러")
     parser.add_argument("--test", action="store_true", help="각 게시판 1페이지만 크롤링")
     parser.add_argument(
-        "--target", choices=["decisions", "criteria", "all"], default="all",
+        "--target", choices=["decisions", "criteria", "main_precedents", "all"], default="all",
         help="크롤링할 게시판 선택 (기본: all)",
     )
     args = parser.parse_args()
@@ -338,6 +352,19 @@ def main() -> None:
             out_dir=CRITERIA_DIR,
             metadata_path=CRITERIA_DIR / "metadata.jsonl",
             parse_list_fn=parse_criteria_list,
+            id_field="prcdnt_slno",
+            test_mode=args.test,
+        )
+
+    if args.target in ("main_precedents", "all"):
+        crawl_board(
+            crawler,
+            name="주요판례",
+            list_url=MAIN_PRECEDENTS_LIST_URL,
+            menu_no=MAIN_PRECEDENTS_MENU_NO,
+            out_dir=MAIN_PRECEDENTS_DIR,
+            metadata_path=MAIN_PRECEDENTS_DIR / "metadata.jsonl",
+            parse_list_fn=parse_main_precedents_list,
             id_field="prcdnt_slno",
             test_mode=args.test,
         )

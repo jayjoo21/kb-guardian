@@ -42,6 +42,7 @@ MIN_TEXT_LEN = 200
 BOARDS = {
     "decisions": {"name": "분쟁조정결정례", "raw_dir": DATA_RAW / "decisions", "parsed_dir": DATA_PARSED / "decisions"},
     "criteria": {"name": "분쟁해결기준", "raw_dir": DATA_RAW / "criteria", "parsed_dir": DATA_PARSED / "criteria"},
+    "main_precedents": {"name": "주요판례", "raw_dir": DATA_RAW / "main_precedents", "parsed_dir": DATA_PARSED / "main_precedents"},
 }
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -310,14 +311,14 @@ def run_board(board_key: str, force: bool, ids_filter: list) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="FSS 첨부파일/본문 텍스트 추출기")
-    parser.add_argument("--target", choices=["decisions", "criteria", "all"], default="all")
+    parser.add_argument("--target", choices=["decisions", "criteria", "main_precedents", "all"], default="all")
     parser.add_argument("--force", action="store_true", help="이미 parsed된 게시글도 덮어쓰기")
     parser.add_argument("--ids", help="쉼표로 구분된 게시글 ID만 처리 (소규모 테스트용)")
     args = parser.parse_args()
 
     ids_filter = [x.strip() for x in args.ids.split(",")] if args.ids else None
 
-    board_keys = ["decisions", "criteria"] if args.target == "all" else [args.target]
+    board_keys = list(BOARDS.keys()) if args.target == "all" else [args.target]
     for board_key in board_keys:
         run_board(board_key, args.force, ids_filter)
 
