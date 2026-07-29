@@ -1,0 +1,45 @@
+{
+  "case_id": "64730",
+  "respondent_arguments": [
+    {
+      "argument": "담당직원이 본건 상품설명서를 통해 롤오버의 가격괴리 위험에 대하여 설명하였다.",
+      "basis": "서면_교부",
+      "accepted": "일부인정",
+      "accepted_quote": "본건 상품 관련 상품설명서에는 '선물과 현물 가격 차이에 따른 롤오버비용 등으로 ETF 거래가격이 WTI 가격과의 괴리가 발생할 수 있다'고 기재되어 있을 뿐 이러한 롤오버비용이 무엇인지, 그 효과가 어느 정도 되는지 및 WTI 가격과 괴리 발생의 효과가 무엇인지에 대하여는 구체적인 설명이 없어 일반투자자인 신청인이 롤오버효과에 대하여 명확히 이해할 수 있었다고 보기 어려운 점",
+      "accepted_basis": "직접"
+    },
+    {
+      "argument": "투자위험성이 기재된 투자일임계약서 등에 신청인이 자필서명하였으므로 손해금액에 대해 배상할 책임이 없다.",
+      "basis": "자필_서명",
+      "accepted": "배척",
+      "accepted_quote": null,
+      "accepted_basis": "간접"
+    }
+  ],
+  "evidence_items": [
+    {
+      "type": "상담_녹취",
+      "source_term": "통화내용 요약",
+      "existed": true,
+      "role": "신청인유리"
+    },
+    {
+      "type": "상품설명서_교부",
+      "source_term": "상품설명서",
+      "existed": true,
+      "role": "신청인유리"
+    },
+    {
+      "type": "자필서명",
+      "source_term": "위험고지 안내서 및 투자일임계약서",
+      "existed": true,
+      "role": "신청인불리"
+    },
+    {
+      "type": "진술_증언",
+      "source_term": "담당직원의 면담 진술",
+      "existed": true,
+      "role": "신청인유리"
+    }
+  ]
+}

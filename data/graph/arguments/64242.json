@@ -1,0 +1,39 @@
+{
+  "case_id": "64242",
+  "respondent_arguments": [
+    {
+      "argument": "담당직원은 신청인의 포괄적 일임을 받아 매매하였으므로 임의매매라는 주장은 부당하다.",
+      "basis": "일임_임의매매부인",
+      "accepted": "인정",
+      "accepted_quote": "신청인의 묵시적인 포괄적 매매일임이 있었던 것으로 판단되므로 본건 매매가 임의매매라는 신청인의 주장은 이유가 없음.",
+      "accepted_basis": "직접"
+    },
+    {
+      "argument": "동 직원이 제공한 각서가 손실보전각서라고 하더라도 이는 증권거래법상 무효이므로 이를 이유로 사용자배상책임을 질 수는 없다.",
+      "basis": "기타",
+      "accepted": "인정",
+      "accepted_quote": "동 각서는 다음의 사실에 비추어 그 효력을 인정할 수 없음... 사회질서에 위반되어 무효라 할 것임.",
+      "accepted_basis": "직접"
+    }
+  ],
+  "evidence_items": [
+    {
+      "type": "상담_녹취",
+      "source_term": "담당직원-신청인 매매관련 통화 녹취록",
+      "existed": true,
+      "role": "신청인불리"
+    },
+    {
+      "type": "진술_증언",
+      "source_term": "담당직원의 계좌개설 경위 진술",
+      "existed": true,
+      "role": "신청인불리"
+    },
+    {
+      "type": "계약서",
+      "source_term": "손실보전 각서",
+      "existed": true,
+      "role": "신청인유리"
+    }
+  ]
+}

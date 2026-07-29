@@ -1,0 +1,63 @@
+{
+  "case_id": "64519",
+  "respondent_arguments": [
+    {
+      "argument": "담당직원은 신청인의 대리인인 김OO의 동의를 받아 본건 펀드에 가입한 것으로 이를 임의가입으로 볼 수 없다.",
+      "basis": "일임_임의매매부인",
+      "accepted": "인정",
+      "accepted_quote": "그러나 설령 본건 펀드 가입이 신청인 대표이사의 승낙 없이 이루어졌다고 하더라도 다음과 같은 점에 비추어 이를 임의가입이라고 보기는 어렵다 할 것임",
+      "accepted_basis": "직접"
+    },
+    {
+      "argument": "펀드가입 권유시 펀드의 주요특성에 대해 충분한 설명을 하였고, 유선상 모집청약하여 설명의무위반이나 부당권유 사실이 없다.",
+      "basis": "설명이행_주장",
+      "accepted": "배척",
+      "accepted_quote": "담당직원은 상품의 특성 및 위험성, 손실발생의 가능성과 그 범위에 대한 명확한 설명을 하지 아니하여 신청인에게 투자행위에 수반되는 위험성에 대한 올바른 인식형성을 방해하거나 투자상황에 비추어 과대한 위험성을 수반하는 거래를 적극적으로 권유한 경우에 해당한다 할 것임",
+      "accepted_basis": "직접"
+    }
+  ],
+  "evidence_items": [
+    {
+      "type": "상품설명서_교부",
+      "source_term": "투자설명서",
+      "existed": false,
+      "role": "신청인유리"
+    },
+    {
+      "type": "광고_홍보물",
+      "source_term": "금주의 ELF 상품현황",
+      "existed": true,
+      "role": "신청인유리"
+    },
+    {
+      "type": "투자자정보확인서_대필",
+      "source_term": "투자설명서 교부 및 주요내용 설명확인서",
+      "existed": true,
+      "role": "신청인유리"
+    },
+    {
+      "type": "상담_녹취",
+      "source_term": "2008.7.9.자 녹취록",
+      "existed": true,
+      "role": "신청인불리"
+    },
+    {
+      "type": "상담_녹취",
+      "source_term": "2009.3.30.자 녹취록",
+      "existed": true,
+      "role": "중립"
+    },
+    {
+      "type": "진술_증언",
+      "source_term": "문답서",
+      "existed": true,
+      "role": "신청인불리"
+    },
+    {
+      "type": "통장거래내역",
+      "source_term": "종합통장",
+      "existed": true,
+      "role": "중립"
+    }
+  ]
+}
