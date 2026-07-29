@@ -26,6 +26,7 @@
   position: relative;
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
+  zoom: var(--large-text-zoom, 1);
 }
 
 /* 데스크톱: 중앙 정렬된 폰 프레임 + 옆에 서비스명/설명 */

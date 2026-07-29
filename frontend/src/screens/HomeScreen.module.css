@@ -112,13 +112,6 @@
   gap: var(--space-tight);
 }
 
-.freeformLabel {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--slate);
-  margin: 0;
-}
-
 .form {
   display: flex;
   flex-direction: column;

@@ -18,6 +18,18 @@ interface ActionLink {
 // 전부 실제 존재를 확인한 공개 URL만 쓴다(가짜 링크·예약 버튼 없음).
 const ACTION_LINKS: ActionLink[] = [
   {
+    label: 'KB 금융소비자보호 고객센터',
+    href: 'https://obank.kbstar.com/quics?page=osupp',
+    note: 'KB국민은행 공식 페이지로 이동합니다',
+    external: true,
+  },
+  {
+    label: 'KB 전화민원상담 080-000-7900',
+    href: 'tel:080-000-7900',
+    note: '전화 연결됩니다',
+    external: false,
+  },
+  {
     label: '금융감독원 파인(FINE) — 분쟁조정 신청',
     href: 'https://fine.fss.or.kr',
     note: '금융감독원 공식 사이트로 이동합니다',

@@ -7,11 +7,46 @@
   background: var(--paper);
 }
 
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-tight);
+}
+
 .title {
   font-size: 19px;
   font-weight: 700;
   color: var(--ink);
   margin: 0;
+}
+
+.settingsButton {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: var(--ink);
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-element);
+  border-radius: var(--radius);
+  background: var(--kb-yellow-soft);
+  border: 1px solid var(--kb-yellow);
+}
+
+.summaryLine {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink);
 }
 
 .empty {
@@ -71,9 +106,36 @@
   background: var(--surface);
 }
 
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-tight);
+}
+
 .cardDate {
   font-size: 11px;
   color: var(--slate);
+}
+
+.badge {
+  flex: none;
+  padding: 1px var(--space-tight);
+  border-radius: var(--radius-sm);
+  background: var(--hairline);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--slate);
+}
+
+.badgeStrong {
+  background: var(--kb-yellow-soft);
+  color: var(--ink);
+}
+
+.cardHistogram {
+  margin-top: var(--space-1);
+  max-width: 180px;
 }
 
 .cardText {
@@ -99,13 +161,3 @@
   color: var(--slate);
 }
 
-.logout {
-  flex: none;
-  min-height: 44px;
-  border: none;
-  background: none;
-  font-size: 13px;
-  color: var(--slate);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}

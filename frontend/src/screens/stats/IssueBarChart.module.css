@@ -42,7 +42,7 @@
 
 .row {
   display: grid;
-  grid-template-columns: 84px 1fr 40px;
+  grid-template-columns: 84px 1fr 62px;
   align-items: center;
   gap: var(--space-tight);
 }
@@ -65,11 +65,29 @@
 .bar {
   height: 100%;
   border-radius: 5px;
+  background: var(--slate-faint);
+}
+
+.barMine {
   background: var(--kb-yellow);
+}
+
+.countCol {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
 }
 
 .count {
   font-size: 11px;
   color: var(--slate);
   text-align: right;
+}
+
+.myBadge {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
 }

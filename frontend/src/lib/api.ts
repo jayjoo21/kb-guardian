@@ -177,6 +177,22 @@ export interface EvidencePattern {
   ratio_comparison: RatioComparison | null
 }
 
+/** KB국민은행 공개 약관·상품설명서에서 발췌한 실제 문구(원문 대조 검증됨,
+    scripts/extract_kb_terms.py). */
+export interface KbTermQuote {
+  source_file: string
+  product: string
+  text: string
+  issues: string[]
+}
+
+/** 8-1 능동 제안(쟁점 보완) — 분류된 쟁점과 그래프상 공동 태깅 빈도가 가장 높은 다른
+    쟁점. case_count는 그래프 실측 사례 건수(자연수). */
+export interface IssueSuggestion {
+  issue: string
+  case_count: number
+}
+
 export interface Evidence {
   similar_cases: SimilarCase[]
   law_articles: LawArticleRef[]
@@ -187,6 +203,8 @@ export interface Evidence {
   evidence_patterns: EvidencePattern[]
   /** 유사 사례가 부족해 함께 검색한 인접 쟁점. 없으면 null(인접 검색이 트리거되지 않음). */
   adjacent_issue: string | null
+  kb_terms: KbTermQuote[]
+  issue_suggestion: IssueSuggestion | null
 }
 
 /** 오케스트레이터의 다섯 판단 단계. 실제로 일어난 판단만 순서대로 온다(연출 아님) —

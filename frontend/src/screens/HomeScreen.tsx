@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent, type KeyboardEvent } from 'react'
 import { fetchStats } from '../lib/api'
 import { MicButton } from '../components/MicButton'
 import { DocumentScanner } from '../components/DocumentScanner'
+import { AiBubble } from '../components/AiBubble'
 import styles from './HomeScreen.module.css'
 
 interface IssueCard {
@@ -154,7 +155,7 @@ export function HomeScreen({ onStartConsult, error = null }: HomeScreenProps) {
       </section>
 
       <section className={styles.freeform} aria-label="직접 입력">
-        <p className={styles.freeformLabel}>또는 직접 입력</p>
+        <AiBubble>어떤 상황인지 알려주세요. 자세히 적어주실수록 더 정확하게 분석해 드려요.</AiBubble>
         <form className={styles.form} onSubmit={handleSubmit}>
           <div className={styles.inputRow}>
             <textarea

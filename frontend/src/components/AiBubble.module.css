@@ -1,0 +1,28 @@
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-tight);
+}
+
+.avatar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--kb-yellow-soft);
+  color: var(--ink);
+  margin-top: 2px;
+}
+
+.bubble {
+  margin: 0;
+  padding: var(--space-element);
+  border-radius: var(--radius) var(--radius) var(--radius) var(--radius-sm);
+  background: var(--card);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink);
+}

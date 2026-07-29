@@ -5,8 +5,10 @@
 }
 
 .draft {
+  width: 100%;
   margin: 0 0 var(--space-tight);
   padding: var(--space-element);
+  border: 1px solid var(--card-border);
   border-radius: var(--radius);
   background: var(--card);
   font-family: var(--font-mono);
@@ -15,8 +17,14 @@
   color: var(--ink);
   white-space: pre-wrap;
   word-break: break-word;
-  max-height: 260px;
-  overflow-y: auto;
+  resize: vertical;
+  min-height: 260px;
+}
+
+.draft:focus {
+  border-color: var(--ink);
+  outline: none;
+  background: var(--paper);
 }
 
 .buttonRow {

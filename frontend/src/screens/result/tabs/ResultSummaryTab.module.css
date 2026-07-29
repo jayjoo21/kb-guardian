@@ -10,8 +10,14 @@
   gap: var(--space-1);
 }
 
+.summaryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-tight);
+}
+
 .aiLabel {
-  align-self: flex-start;
   display: inline-flex;
   align-items: center;
   gap: 4px;

@@ -1,0 +1,74 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+}
+
+.card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-tight);
+  padding: var(--space-element);
+  border: 1px solid var(--kb-yellow);
+  border-radius: var(--radius);
+  background: var(--kb-yellow-soft);
+}
+
+.iconBadge {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+}
+
+.text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-tight);
+}
+
+.primaryBtn {
+  min-height: 32px;
+  padding: 0 var(--space-element);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius-sm);
+  background: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--surface);
+}
+
+.dismissBtn {
+  min-height: 32px;
+  padding: 0 var(--space-element);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--slate);
+}
+
+.dismissBtn:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}

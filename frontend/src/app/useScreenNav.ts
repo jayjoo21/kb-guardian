@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 
 export type TabScreenId = 'home' | 'my-consult' | 'stats'
-export type ScreenId = 'splash' | 'login' | 'signup' | TabScreenId | 'consult' | 'result'
+export type ScreenId = 'splash' | 'login' | 'signup' | TabScreenId | 'consult' | 'result' | 'settings'
 
 export function isTabScreen(screen: ScreenId): screen is TabScreenId {
   return screen === 'home' || screen === 'my-consult' || screen === 'stats'

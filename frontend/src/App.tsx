@@ -8,6 +8,7 @@ import { LoginScreen } from './screens/LoginScreen'
 import { SignupScreen } from './screens/SignupScreen'
 import { HomeScreen } from './screens/HomeScreen'
 import { MyConsultScreen } from './screens/MyConsultScreen'
+import { SettingsScreen } from './screens/SettingsScreen'
 import { StatsScreen } from './screens/StatsScreen'
 import { ConsultLoadingScreen } from './screens/ConsultLoadingScreen'
 import { ResultScreen } from './screens/ResultScreen'
@@ -33,6 +34,9 @@ function App() {
   const [agentSteps, setAgentSteps] = useState<AgentStep[]>([])
   const [clarification, setClarification] = useState<ClarificationCandidate[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // 8-1/8-2용 — 지금 result에 표시 중인 상담의 이력 id(자가보고 상태를 이 항목에
+  // 이어 붙이거나, "지난 상담과 비교"에서 자기 자신을 제외하는 데 쓴다).
+  const [historyEntryId, setHistoryEntryId] = useState<string | null>(null)
   const controllerRef = useRef<AbortController | null>(null)
   const navTimeoutRef = useRef<number | null>(null)
 
@@ -76,6 +80,7 @@ function App() {
     setAgentSteps([])
     setClarification(null)
     setError(null)
+    setHistoryEntryId(null)
 
     // 스트리밍 타이핑 표시는 하지 않는다 — SSE로 데이터는 계속 받되(단계 체크용),
     // 화면 전환은 답변이 완전히 완성(done)된 뒤 한 번에 이뤄진다.
@@ -107,13 +112,14 @@ function App() {
           setAnswer(full)
           setAnswerDone(true)
           if (latestClassified) {
-            saveHistoryEntry({
+            const id = saveHistoryEntry({
               text: input,
               classified: latestClassified,
               answer: full,
               evidence: latestEvidence,
               procedure: latestProcedure,
             })
+            setHistoryEntryId(id)
           }
           // 3단계(대응 가이드 생성) 체크가 화면에 실제로 보인 뒤 result로 넘어간다.
           const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -145,6 +151,14 @@ function App() {
   function reanalyzeWithIssue(issue: string) {
     nav.replaceTop('consult')
     runConsult(text, [issue])
+  }
+
+  /** 8-1 능동 제안(쟁점 보완) "확인하고 재분석" — 기존 분류는 그대로 두고 제안된
+      쟁점을 더해 재조회한다(교체가 아니라 추가라는 점이 reanalyzeWithIssue와 다르다). */
+  function addIssueAndReanalyze(issue: string) {
+    if (!classified) return
+    nav.replaceTop('consult')
+    runConsult(text, [...classified.issues, issue])
   }
 
   /** 로딩 화면 되묻기(①) — 사용자가 고른 쟁점으로 파이프라인을 이어간다. */
@@ -182,6 +196,7 @@ function App() {
     setEvidence(entry.evidence)
     setProcedure(entry.procedure)
     setAnswerDone(true)
+    setHistoryEntryId(entry.id)
     nav.push('result')
   }
 
@@ -203,8 +218,13 @@ function App() {
         )}
         {nav.current === 'home' && <HomeScreen onStartConsult={startConsult} error={error} />}
         {nav.current === 'my-consult' && (
-          <MyConsultScreen onOpenEntry={viewHistoryEntry} onStartConsult={goHome} onLogout={handleLogout} />
+          <MyConsultScreen
+            onOpenEntry={viewHistoryEntry}
+            onStartConsult={goHome}
+            onOpenSettings={() => nav.push('settings')}
+          />
         )}
+        {nav.current === 'settings' && <SettingsScreen onBack={nav.back} onLogout={handleLogout} />}
         {nav.current === 'stats' && <StatsScreen />}
         {nav.current === 'consult' && (
           <ConsultLoadingScreen
@@ -223,9 +243,11 @@ function App() {
             answer={answer}
             evidence={evidence}
             procedure={procedure}
+            historyEntryId={historyEntryId}
             onBack={nav.back}
             onHome={goHome}
             onReanalyze={reanalyzeWithIssue}
+            onAddIssue={addIssueAndReanalyze}
           />
         )}
       </ScreenTransition>

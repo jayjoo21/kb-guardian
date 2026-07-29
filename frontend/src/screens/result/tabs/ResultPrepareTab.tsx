@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { Route } from 'lucide-react'
+import { ExternalLink, Route, ShieldAlert } from 'lucide-react'
 import { AccordionSection } from '../../../components/AccordionSection'
 import { Checkbox } from '../../../components/Checkbox'
 import { EvidencePatternsAccordion } from '../EvidencePatternsAccordion'
 import { ComplaintDraftAccordion } from '../ComplaintDraftAccordion'
+import { loadHistory, setCheckedDocument } from '../../../lib/history'
 import type { Classified, Evidence, EvidencePattern, Procedure } from '../../../lib/api'
 import type { ReactNode } from 'react'
 import styles from './ResultPrepareTab.module.css'
@@ -11,12 +12,27 @@ import styles from './ResultPrepareTab.module.css'
 const TIMELINE_STAGES = ['자료 정리', '은행 민원', '금감원 분쟁조정', '결과 확인']
 const CURRENT_STAGE_INDEX = 0
 
+// 실제 존재를 확인한 공식 URL만 쓴다(가짜 링크 없음).
+const STAGE_LINKS = [
+  {
+    label: 'KB국민은행 민원접수',
+    href: 'https://obank.kbstar.com/quics?page=C044215',
+    note: 'KB국민은행 공식 페이지로 이동합니다',
+  },
+  {
+    label: '금융감독원 분쟁조정 신청(파인)',
+    href: 'https://fine.fss.or.kr',
+    note: '금융감독원 공식 사이트로 이동합니다',
+  },
+]
+
 interface ResultPrepareTabProps {
   procedure: Procedure | null
   evidencePatterns: EvidencePattern[]
   text: string
   classified: Classified
   evidence: Evidence | null
+  historyEntryId: string | null
 }
 
 function PrepareSection({ title, icon, children }: { title: string; icon: ReactNode; children: ReactNode }) {
@@ -39,8 +55,17 @@ export function ResultPrepareTab({
   text,
   classified,
   evidence,
+  historyEntryId,
 }: ResultPrepareTabProps) {
-  const [checked, setChecked] = useState<Record<number, boolean>>({})
+  const [checkedDocs, setCheckedDocs] = useState<string[]>(
+    () => loadHistory().find((e) => e.id === historyEntryId)?.checkedDocuments ?? [],
+  )
+
+  function toggleDocument(doc: string) {
+    const next = !checkedDocs.includes(doc)
+    setCheckedDocs((prev) => (next ? [...prev, doc] : prev.filter((d) => d !== doc)))
+    if (historyEntryId) setCheckedDocument(historyEntryId, doc, next)
+  }
 
   if (!procedure && evidencePatterns.length === 0) {
     return (
@@ -67,6 +92,24 @@ export function ResultPrepareTab({
             })}
           </ol>
 
+          <div className={styles.stageLinks}>
+            {STAGE_LINKS.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.stageLink}
+              >
+                <ExternalLink size={13} aria-hidden="true" />
+                <span>
+                  <span className={styles.stageLinkLabel}>{link.label}</span>
+                  <span className={styles.stageLinkNote}>{link.note}</span>
+                </span>
+              </a>
+            ))}
+          </div>
+
           {procedure.steps.length > 0 && (
             <AccordionSection title="세부 절차" defaultOpen={false}>
               <ul className={styles.steps}>
@@ -85,11 +128,8 @@ export function ResultPrepareTab({
               <ul className={styles.docList}>
                 {procedure.documents.map((doc, i) => (
                   <li key={i}>
-                    <Checkbox
-                      checked={!!checked[i]}
-                      onChange={() => setChecked((prev) => ({ ...prev, [i]: !prev[i] }))}
-                    >
-                      <span className={checked[i] ? styles.docChecked : undefined}>{doc}</span>
+                    <Checkbox checked={checkedDocs.includes(doc)} onChange={() => toggleDocument(doc)}>
+                      <span className={checkedDocs.includes(doc) ? styles.docChecked : undefined}>{doc}</span>
                     </Checkbox>
                   </li>
                 ))}
@@ -98,6 +138,17 @@ export function ResultPrepareTab({
           )}
         </PrepareSection>
       )}
+
+      <PrepareSection title="위법계약해지권 안내" icon={<ShieldAlert size={16} />}>
+        <p className={styles.legalNotice}>
+          금융소비자보호법 제47조에 따라, 금융회사가 설명의무 등 주요 의무를 위반한 사실을 <strong>안
+          날부터 1년</strong>, <strong>계약체결일부터 5년</strong> 이내에는 계약을 해지할 수 있어요(위법계약해지권).
+        </p>
+        <p className={styles.legalNotice}>
+          다만 펀드·ELS 등 투자성 상품은 계약 해지가 아니라 별도의 <strong>청약철회</strong> 제도가 적용되고,
+          그 행사 기간이 더 짧게 제한되어 있으니 유의하세요.
+        </p>
+      </PrepareSection>
 
       {evidencePatterns.length > 0 && <EvidencePatternsAccordion items={evidencePatterns} />}
 

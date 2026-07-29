@@ -6,8 +6,8 @@
 }
 
 .title {
-  font-size: 15px;
-  font-weight: 700;
+  font-size: var(--fs-section);
+  font-weight: var(--fw-section);
   color: var(--ink);
   margin: 0 0 var(--space-1);
 }

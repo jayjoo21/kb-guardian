@@ -1,18 +1,24 @@
 import { useState } from 'react'
 import { Scale } from 'lucide-react'
 import { basisConsumerTitle, basisPrepHint } from '../../../lib/basisLabels'
-import type { RespondentArgumentGroup } from '../../../lib/api'
+import { groupLawArticles } from '../../../lib/lawLinks'
+import type { LawArticleRef, RespondentArgumentGroup } from '../../../lib/api'
 import styles from './ResultAnalysisTab.module.css'
 
 const WEAK_THRESHOLD = 0.5
 const INITIAL_VISIBLE = 3
+// KB국민은행 공식 페이지에서 실제 존재를 확인한 URL(금소법 6대 판매원칙 안내).
+const KB_LAW_GUIDE_URL = 'https://obank.kbstar.com/quics?page=C103664'
 
 interface ResultAnalysisTabProps {
   items: RespondentArgumentGroup[]
+  /** 이번에 분류된 쟁점의 근거 법조항(그래프 GOVERNED_BY 관계 기반) — 헤더 아래 인용 칩으로 표시. */
+  lawArticles: LawArticleRef[]
 }
 
-export function ResultAnalysisTab({ items }: ResultAnalysisTabProps) {
+export function ResultAnalysisTab({ items, lawArticles }: ResultAnalysisTabProps) {
   const [showAll, setShowAll] = useState(false)
+  const lawGroups = groupLawArticles(lawArticles.map((l) => l.ref))
 
   const mapped = items
     .map((item) => ({ item, title: basisConsumerTitle(item.basis) }))
@@ -38,6 +44,36 @@ export function ResultAnalysisTab({ items }: ResultAnalysisTabProps) {
         </span>
         <h2 className={styles.title}>은행 반박 ↔ 내 대응</h2>
       </div>
+
+      {lawGroups.length > 0 && (
+        <div className={styles.lawRow} aria-label="관련 법조항">
+          {lawGroups.map((g) => (
+            <a
+              key={g.lawName}
+              href={g.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.lawChip}
+              title="국가법령정보센터 공식 사이트로 이동합니다"
+            >
+              {g.lawName}
+              {g.articles.length > 0 ? ` ${g.articles.join(', ')}` : ''}
+            </a>
+          ))}
+          <a
+            href={KB_LAW_GUIDE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={styles.lawChip}
+            title="KB국민은행 공식 페이지로 이동합니다"
+          >
+            금융소비자보호법 판매원칙 안내(KB 공식)
+          </a>
+        </div>
+      )}
+      {lawGroups.length > 0 && (
+        <p className={styles.lawNote}>탭하면 국가법령정보센터·KB국민은행 공식 페이지로 이동합니다</p>
+      )}
 
       <ul className={styles.list}>
         {visible.map(({ item, title }) => {

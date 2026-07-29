@@ -22,10 +22,37 @@
 }
 
 .title {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: var(--fs-section);
+  font-weight: var(--fw-section);
   margin: 0;
   color: var(--ink);
+}
+
+.lawRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.lawChip {
+  padding: 3px var(--space-tight);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--card-border);
+  background: var(--card);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--slate);
+}
+
+.lawChip:hover {
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.lawNote {
+  margin: -2px 0 0;
+  font-size: 10px;
+  color: var(--slate);
 }
 
 .list {

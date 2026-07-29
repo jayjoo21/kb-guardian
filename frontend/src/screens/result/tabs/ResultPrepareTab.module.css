@@ -29,8 +29,8 @@
 }
 
 .sectionTitle {
-  font-size: 16px;
-  font-weight: 600;
+  font-size: var(--fs-section);
+  font-weight: var(--fw-section);
   margin: 0;
   color: var(--ink);
 }
@@ -98,6 +98,46 @@
   color: var(--ink);
 }
 
+.stageLinks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+}
+
+.stageLink {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-tight);
+  padding: var(--space-tight) var(--space-element);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  color: var(--ink);
+}
+
+.stageLink:hover {
+  border-color: var(--ink);
+}
+
+.stageLink svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--slate);
+}
+
+.stageLinkLabel {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.stageLinkNote {
+  display: block;
+  font-size: 10.5px;
+  color: var(--slate);
+}
+
 .steps {
   list-style: none;
   margin: 0;
@@ -145,4 +185,16 @@
   margin: 0;
   text-align: center;
   padding: var(--space-card);
+}
+
+.legalNotice {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--slate);
+  margin: 0;
+}
+
+.legalNotice strong {
+  color: var(--ink);
+  font-weight: 700;
 }

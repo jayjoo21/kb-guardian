@@ -27,8 +27,8 @@
 .title {
   flex: 1;
   text-align: center;
-  font-size: 16px;
-  font-weight: 700;
+  font-size: var(--fs-title);
+  font-weight: var(--fw-title);
   color: var(--ink);
   margin: 0;
 }

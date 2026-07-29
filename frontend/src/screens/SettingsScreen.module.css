@@ -1,0 +1,106 @@
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+}
+
+.body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-card);
+  padding: var(--space-card);
+}
+
+.card {
+  padding: var(--space-card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-element);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-tight);
+}
+
+.rowIcon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--kb-yellow-soft);
+  color: var(--ink);
+}
+
+.rowText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rowLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.rowHint {
+  font-size: 11px;
+  color: var(--slate);
+}
+
+.unsupported {
+  font-size: 12px;
+  color: var(--slate);
+  margin: 0;
+}
+
+.toggle {
+  flex: none;
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  border: none;
+  background: var(--hairline-strong);
+  position: relative;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.toggleOn {
+  background: var(--kb-yellow);
+}
+
+.toggleKnob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.toggleOn .toggleKnob {
+  transform: translateX(18px);
+}
+
+.logout {
+  flex: none;
+  min-height: 44px;
+  border: none;
+  background: none;
+  font-size: 13px;
+  color: var(--slate);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

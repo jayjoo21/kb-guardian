@@ -20,7 +20,7 @@ decision_reason은 실제로 일어난 일만 사실대로 적되(하지 않은 
 import asyncio
 import logging
 
-from backend.services import answerer, classifier, graph_search
+from backend.services import answerer, classifier, graph_search, kb_terms
 
 logger = logging.getLogger("orchestrator")
 
@@ -70,6 +70,10 @@ MIN_SIMILAR_CASES = 5
 HIGH_CONFIDENCE_MIN_SIMILAR_CASES = 5
 HIGH_CONFIDENCE_MIN_RATIO_N = 10
 
+# 8-1 능동 제안(쟁점 보완): 공동 태깅된 쟁점이 있어도 그 쟁점 자체 표본이 너무 적으면
+# (예: 우연히 1건만 같이 태깅) 제안하지 않는다.
+ISSUE_SUGGESTION_MIN_CASES = 3
+
 
 def build_documents(issues: list) -> list:
     seen, docs = set(), []
@@ -109,6 +113,24 @@ def _judge_ambiguous(candidates: list) -> tuple[bool, str]:
     return False, ""
 
 
+async def _issue_suggestion(driver, database: str, issues: list) -> dict | None:
+    """8-1 능동 제안(쟁점 보완): 분류된 쟁점과 그래프상 가장 자주 함께 태깅된 다른 쟁점이
+    있으면 {issue, case_count}를 반환한다. 근거는 반드시 그래프 집계(공동 태깅 빈도 +
+    실제 사례 건수)이고, 그 쟁점 표본이 ISSUE_SUGGESTION_MIN_CASES 미만이면 제안하지
+    않는다(약한 우연 태깅으로 제안을 지어내지 않음)."""
+    if not issues:
+        return None
+    co_tagged = await asyncio.to_thread(graph_search.co_tagged_issues, driver, database, issues[0], issues, 1)
+    if not co_tagged:
+        return None
+    suggested = co_tagged[0]
+    counts = await asyncio.to_thread(graph_search.case_counts_for_issues, driver, database, [suggested])
+    case_count = counts.get(suggested, 0)
+    if case_count < ISSUE_SUGGESTION_MIN_CASES:
+        return None
+    return {"issue": suggested, "case_count": case_count}
+
+
 async def _gather_evidence(driver, database: str, issues: list, products: list) -> dict:
     # find_similar_cases 결과(case_ids)가 precedents 조회에 필요하므로 그것만 먼저 실행하고,
     # 나머지(ratio_stats/law_articles/precedents/criteria/respondent_arguments/evidence_patterns)는
@@ -132,6 +154,8 @@ async def _gather_evidence(driver, database: str, issues: list, products: list) 
         "law_articles": law_articles, "precedents": precedents, "criteria": criteria,
         "respondent_arguments": respondent_arguments, "evidence_patterns": evidence_patterns,
         "adjacent_issue": None,
+        "kb_terms": kb_terms.kb_terms_for_issues(issues),
+        "issue_suggestion": await _issue_suggestion(driver, database, issues),
     }
 
 

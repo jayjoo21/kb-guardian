@@ -99,6 +99,22 @@ class EvidencePattern(BaseModel):
     ratio_comparison: Optional[RatioComparison] = None  # 양쪽 n>=10일 때만 채움
 
 
+class KbTermQuote(BaseModel):
+    """KB국민은행 공개 약관·상품설명서에서 발췌한 실제 문구(scripts/extract_kb_terms.py로
+    추출 + 원문 대조 검증됨). issues는 스크립트가 판단한 관련 쟁점(0개 이상)."""
+    source_file: str
+    product: str
+    text: str
+    issues: list[str] = []
+
+
+class IssueSuggestion(BaseModel):
+    """8-1 능동 제안(쟁점 보완) — 분류된 쟁점과 그래프상 공동 태깅 빈도가 가장 높은
+    다른 쟁점. case_count는 그 쟁점의 실제 사례 건수(그래프 집계, 자연수)."""
+    issue: str
+    case_count: int
+
+
 class Evidence(BaseModel):
     similar_cases: list[SimilarCase] = []
     law_articles: list[LawArticleRef] = []
@@ -110,6 +126,8 @@ class Evidence(BaseModel):
     # 유사 사례가 부족해(orchestrator.MIN_SIMILAR_CASES 미만) 함께 검색한 인접 쟁점.
     # None이면 인접 쟁점 검색이 트리거되지 않은 것(직접 근거만으로 충분했다는 뜻).
     adjacent_issue: Optional[str] = None
+    kb_terms: list[KbTermQuote] = []
+    issue_suggestion: Optional[IssueSuggestion] = None
 
 
 class Procedure(BaseModel):

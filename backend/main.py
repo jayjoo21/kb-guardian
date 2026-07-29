@@ -23,8 +23,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from backend.schemas import (  # noqa: E402
     ArgumentBasisOverview, Classified, ConsultRequest, ConsultResponse, CorpusTotals, CriteriaRef,
     DocumentScanResult, Evidence, EvidencePattern, EvidenceTypeOverview, GraphNeighborhood, CaseDetail,
-    LawArticleRef, OverallRatioDistribution, Procedure, RatioComparison, RatioDistribution, RatioStats,
-    RespondentArgumentGroup, SimilarCase, SimulateFactorOption, SimulateResponse, StatsResponse,
+    IssueSuggestion, KbTermQuote, LawArticleRef, OverallRatioDistribution, Procedure, RatioComparison,
+    RatioDistribution, RatioStats, RespondentArgumentGroup, SimilarCase, SimulateFactorOption,
+    SimulateResponse, StatsResponse,
 )
 from backend.services import document_scanner, graph_search, orchestrator, simulator  # noqa: E402
 from common.enums import ISSUE_ENUM  # noqa: E402
@@ -164,6 +165,8 @@ async def consult_sync(req: ConsultRequest):
                 for p in evidence["evidence_patterns"]
             ],
             adjacent_issue=evidence["adjacent_issue"],
+            kb_terms=[KbTermQuote(**k) for k in evidence["kb_terms"]],
+            issue_suggestion=IssueSuggestion(**evidence["issue_suggestion"]) if evidence["issue_suggestion"] else None,
         ),
         procedure=Procedure(**procedure),
     )

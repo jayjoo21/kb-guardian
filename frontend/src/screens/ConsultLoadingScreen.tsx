@@ -1,4 +1,5 @@
 import { TopAppBar } from '../app/TopAppBar'
+import { AiBubble } from '../components/AiBubble'
 import type { AgentStep, AgentStepId, ClarificationCandidate } from '../lib/api'
 import styles from './ConsultLoadingScreen.module.css'
 
@@ -55,6 +56,8 @@ export function ConsultLoadingScreen({
   const byId = new Map(steps.map((s) => [s.step, s]))
   const doneFlags = STAGE_ORDER.map((id) => (id === 'answer' ? answerDone : byId.has(id)))
   const activeIndex = doneFlags.findIndex((done) => !done)
+  // 되묻기(①)의 AI 발화는 오케스트레이터가 실제로 낸 판단 사유를 그대로 쓴다(지어낸 대사 아님).
+  const clarifyReason = byId.get('classify')?.decision_reason
 
   return (
     <div className={styles.screen}>
@@ -64,7 +67,7 @@ export function ConsultLoadingScreen({
 
         {clarification ? (
           <div className={styles.clarify}>
-            <p className={styles.clarifyTitle}>혹시 이런 상황에 가까운가요?</p>
+            <AiBubble>{clarifyReason ?? '말씀하신 상황을 확인할게요. 가장 가까운 쟁점을 골라주세요.'}</AiBubble>
             <p className={styles.clarifySubtitle}>가장 가까운 쟁점을 골라주시면 이어서 분석할게요</p>
             <ul className={styles.clarifyList}>
               {clarification.map((c) => (

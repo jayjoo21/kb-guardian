@@ -25,6 +25,20 @@
   --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   --font-body: 'Pretendard Variable', Pretendard, -apple-system, 'Malgun Gothic', sans-serif;
 
+  /* 타이포 계층 — 화면 제목(예: 상단바) / 카드·섹션 헤더 / 본문(body 기본값과 동일,
+     참고용) / 캡션(보조·메타 텍스트). 기존 컴포넌트의 세밀한 캡션 크기(10~12.5px)는
+     좁은 모바일 카드 안에서 의도적으로 차등을 둔 것이라 전부 --fs-caption로
+     통일하지 않는다 — 새 제목·섹션 헤더에 우선 적용한다. */
+  --fs-title: 20px;
+  --fw-title: 700;
+  --fs-section: 16px;
+  --fw-section: 600;
+  --fs-body: 15px;
+  --fs-caption: 13px;
+
+  /* 설정 > 큰 글씨 모드에서 1.2로 바뀐다(frontend/src/lib/settings.ts) */
+  --large-text-zoom: 1;
+
   /* 형태 */
   --radius: 4px;
   --radius-sm: 2px;

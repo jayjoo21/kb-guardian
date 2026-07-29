@@ -18,7 +18,7 @@ interface ComplaintDraftAccordionProps {
     자체는 파인에서 사용자가 직접 진행). */
 export function ComplaintDraftAccordion({ text, classified, evidence, procedure }: ComplaintDraftAccordionProps) {
   const [copied, setCopied] = useState(false)
-  const draft = buildComplaintDraft({ text, classified, evidence, procedure })
+  const [draft, setDraft] = useState(() => buildComplaintDraft({ text, classified, evidence, procedure }))
 
   async function handleCopy() {
     try {
@@ -44,9 +44,18 @@ export function ComplaintDraftAccordion({ text, classified, evidence, procedure 
 
   return (
     <AccordionSection title="분쟁조정 신청서 만들기" icon={<FilePlus size={16} />}>
-      <p className={styles.hint}>상담 내용으로 신청서 초안을 만들었어요. 제출 전 꼭 확인·보완해주세요.</p>
+      <p className={styles.hint}>
+        상담 내용으로 신청서 초안을 만들었어요. [ ] 표시는 직접 채워주시고, 내용은 자유롭게 수정할 수
+        있어요. 제출 전 꼭 확인·보완해주세요.
+      </p>
 
-      <pre className={styles.draft}>{draft}</pre>
+      <textarea
+        className={styles.draft}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        rows={14}
+        aria-label="분쟁조정 신청서 초안(수정 가능)"
+      />
 
       <div className={styles.buttonRow}>
         <button type="button" className={styles.utilButton} onClick={handleCopy}>

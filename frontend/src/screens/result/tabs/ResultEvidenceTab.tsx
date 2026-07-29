@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import { ChevronRight, ExternalLink, Gavel } from 'lucide-react'
-import { fetchCaseDetail, type ArgumentSample, type Evidence, type SimilarCase, type CaseDetail } from '../../../lib/api'
+import { ChevronRight, ExternalLink, Gavel, Landmark } from 'lucide-react'
+import { fetchCaseDetail, type Evidence, type SimilarCase, type CaseDetail } from '../../../lib/api'
 import { groupLawArticles, lawArticleUrl, lawNameFromRef } from '../../../lib/lawLinks'
 import styles from './ResultEvidenceTab.module.css'
 
@@ -9,15 +9,6 @@ const FSS_DISPUTE_LIST_URL = 'https://www.fss.or.kr/fss/bbs/B0000390/list.do?men
 interface ResultEvidenceTabProps {
   cases: SimilarCase[]
   evidence: Evidence | null
-}
-
-function findQuoteForCase(samples: ArgumentSample[], caseId: string): string | null {
-  for (const group of samples) {
-    for (const s of group) {
-      if (s.case_id === caseId && s.quote) return s.quote
-    }
-  }
-  return null
 }
 
 export function ResultEvidenceTab({ cases, evidence }: ResultEvidenceTabProps) {
@@ -34,7 +25,9 @@ export function ResultEvidenceTab({ cases, evidence }: ResultEvidenceTabProps) {
     return map
   }, [evidence])
 
-  if (cases.length === 0) {
+  const kbTerms = evidence?.kb_terms ?? []
+
+  if (cases.length === 0 && kbTerms.length === 0) {
     return (
       <div className={styles.panel} role="tabpanel">
         <p className={styles.empty}>이번 상담에서 조회된 유사 결정례가 없습니다.</p>
@@ -44,18 +37,41 @@ export function ResultEvidenceTab({ cases, evidence }: ResultEvidenceTabProps) {
 
   return (
     <div className={styles.panel} role="tabpanel">
-      <div className={styles.header}>
-        <span className={styles.iconBadge} aria-hidden="true">
-          <Gavel size={16} />
-        </span>
-        <h2 className={styles.title}>실제 결정례 {cases.length}건</h2>
-      </div>
+      {kbTerms.length > 0 && (
+        <div className={styles.kbTerms}>
+          <div className={styles.header}>
+            <span className={styles.iconBadge} aria-hidden="true">
+              <Landmark size={16} />
+            </span>
+            <h2 className={styles.title}>KB 공식 약관에는 이렇게 명시돼 있어요</h2>
+          </div>
+          <ul className={styles.kbTermsList}>
+            {kbTerms.map((k, i) => (
+              <li key={i} className={styles.kbTermsItem}>
+                <p className={styles.kbTermsQuote}>“{k.text}”</p>
+                <span className={styles.kbTermsSource}>KB국민은행 공개 약관 · {k.source_file}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
-      <ul className={styles.list}>
-        {cases.map((c) => (
-          <EvidenceCaseRow key={c.case_id} caseItem={c} fallbackQuote={quoteByCase.get(c.case_id) ?? null} />
-        ))}
-      </ul>
+      {cases.length > 0 && (
+        <>
+          <div className={styles.header}>
+            <span className={styles.iconBadge} aria-hidden="true">
+              <Gavel size={16} />
+            </span>
+            <h2 className={styles.title}>실제 결정례 {cases.length}건</h2>
+          </div>
+
+          <ul className={styles.list}>
+            {cases.map((c) => (
+              <EvidenceCaseRow key={c.case_id} caseItem={c} fallbackQuote={quoteByCase.get(c.case_id) ?? null} />
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   )
 }
@@ -147,6 +163,7 @@ function EvidenceCaseRow({ caseItem, fallbackQuote }: { caseItem: SimilarCase; f
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.link}
+                title="금융감독원 공식 사이트로 이동합니다"
               >
                 <ExternalLink size={14} aria-hidden="true" />
                 금감원 분쟁조정결정례 공개 게시판
@@ -158,6 +175,7 @@ function EvidenceCaseRow({ caseItem, fallbackQuote }: { caseItem: SimilarCase; f
                   target="_blank"
                   rel="noopener noreferrer"
                   className={styles.link}
+                  title="국가법령정보센터 공식 사이트로 이동합니다"
                 >
                   <ExternalLink size={14} aria-hidden="true" />
                   {g.lawName}
@@ -173,11 +191,13 @@ function EvidenceCaseRow({ caseItem, fallbackQuote }: { caseItem: SimilarCase; f
                     target="_blank"
                     rel="noopener noreferrer"
                     className={styles.link}
+                    title="국가법령정보센터 공식 사이트로 이동합니다"
                   >
                     <ExternalLink size={14} aria-hidden="true" />
                     {ref}
                   </a>
                 ))}
+              <p className={styles.linksNote}>탭하면 정부·금융감독원 공식 사이트로 새 탭에서 이동합니다</p>
             </div>
           )}
         </div>
