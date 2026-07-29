@@ -3,6 +3,7 @@
 """
 
 import asyncio
+import base64
 import json
 import logging
 import os
@@ -13,18 +14,19 @@ from pathlib import Path
 
 import anthropic
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from neo4j import GraphDatabase
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from backend.schemas import (  # noqa: E402
-    Classified, ConsultRequest, ConsultResponse, CriteriaRef, Evidence,
-    GraphNeighborhood, CaseDetail, LawArticleRef, Procedure, RatioDistribution, RatioStats,
-    SimilarCase, SimulateFactorOption, SimulateResponse, StatsResponse,
+    ArgumentBasisOverview, Classified, ConsultRequest, ConsultResponse, CorpusTotals, CriteriaRef,
+    DocumentScanResult, Evidence, EvidencePattern, EvidenceTypeOverview, GraphNeighborhood, CaseDetail,
+    LawArticleRef, OverallRatioDistribution, Procedure, RatioComparison, RatioDistribution, RatioStats,
+    RespondentArgumentGroup, SimilarCase, SimulateFactorOption, SimulateResponse, StatsResponse,
 )
-from backend.services import answerer, classifier, graph_search, simulator  # noqa: E402
+from backend.services import answerer, classifier, document_scanner, graph_search, simulator  # noqa: E402
 from common.enums import ISSUE_ENUM  # noqa: E402
 
 load_dotenv()
@@ -111,19 +113,26 @@ app.add_middleware(
 
 async def _gather_evidence(driver, issues: list, products: list) -> dict:
     # find_similar_cases 결과(case_ids)가 precedents 조회에 필요하므로 그것만 먼저 실행하고,
-    # 나머지 4개(ratio_stats/law_articles/precedents/criteria)는 서로 독립적이므로 병렬 실행한다.
+    # 나머지(ratio_stats/law_articles/precedents/criteria/respondent_arguments/evidence_patterns)는
+    # 서로 독립적이므로 병렬 실행한다.
     similar = await asyncio.to_thread(graph_search.find_similar_cases, driver, NEO4J_DATABASE, issues, products)
     case_ids = [c["case_id"] for c in similar]
 
-    ratio_stats, law_articles, precedents, criteria = await asyncio.gather(
+    (
+        ratio_stats, law_articles, precedents, criteria,
+        respondent_arguments, evidence_patterns,
+    ) = await asyncio.gather(
         asyncio.to_thread(graph_search.ratio_stats_for_issues, driver, NEO4J_DATABASE, issues),
         asyncio.to_thread(graph_search.law_articles_for_issues, driver, NEO4J_DATABASE, issues),
         asyncio.to_thread(graph_search.precedents_for_cases, driver, NEO4J_DATABASE, case_ids),
         asyncio.to_thread(graph_search.criteria_for, driver, NEO4J_DATABASE, issues),
+        asyncio.to_thread(graph_search.respondent_arguments_for_issues, driver, NEO4J_DATABASE, issues),
+        asyncio.to_thread(graph_search.evidence_patterns_for_issues, driver, NEO4J_DATABASE, issues),
     )
     return {
         "similar_cases": similar, "ratio_stats": ratio_stats,
         "law_articles": law_articles, "precedents": precedents, "criteria": criteria,
+        "respondent_arguments": respondent_arguments, "evidence_patterns": evidence_patterns,
     }
 
 
@@ -131,9 +140,25 @@ def _sse(event: str, data) -> str:
     return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
 
 
+def _validate_override_issues(issues):
+    if not issues:
+        return
+    invalid = [i for i in issues if i not in ISSUE_ENUM]
+    if invalid:
+        raise HTTPException(status_code=400, detail=f"유효하지 않은 쟁점: {invalid}")
+
+
+async def _resolve_classified(req: ConsultRequest, client):
+    """결과 화면에서 "이 쟁점이 아니에요"로 사용자가 직접 고른 쟁점이 있으면 그걸
+    그대로 쓰고(재분류 LLM 호출 생략), 없으면 평소대로 classifier로 분류한다."""
+    if req.override_issues:
+        return {"issues": req.override_issues, "products": [], "factors": []}
+    return await asyncio.to_thread(classifier.classify, client, req.text)
+
+
 async def _consult_stream(req: ConsultRequest, driver, sync_client, async_client):
     t0 = time.perf_counter()
-    classified = await asyncio.to_thread(classifier.classify, sync_client, req.text)
+    classified = await _resolve_classified(req, sync_client)
     yield _sse("classified", classified)
     t1 = time.perf_counter()
 
@@ -164,6 +189,7 @@ async def consult(req: ConsultRequest):
     이벤트 순서: classified -> evidence -> procedure -> answer_chunk(N회) -> done
     각 이벤트는 `event: <name>\\ndata: <json>\\n\\n` 형식(표준 SSE)이다.
     """
+    _validate_override_issues(req.override_issues)
     driver = app.state.driver
     sync_client = app.state.anthropic
     async_client = app.state.anthropic_async
@@ -177,11 +203,12 @@ async def consult(req: ConsultRequest):
 @app.post("/api/consult/sync", response_model=ConsultResponse)
 async def consult_sync(req: ConsultRequest):
     """비스트리밍 버전. 테스트·폴백용으로 유지(전체 응답을 한 번에 반환)."""
+    _validate_override_issues(req.override_issues)
     driver = app.state.driver
     client = app.state.anthropic
 
     t0 = time.perf_counter()
-    classified = await asyncio.to_thread(classifier.classify, client, req.text)
+    classified = await _resolve_classified(req, client)
     t1 = time.perf_counter()
 
     evidence = await _gather_evidence(driver, classified["issues"], classified["products"])
@@ -204,6 +231,13 @@ async def consult_sync(req: ConsultRequest):
             precedents=evidence["precedents"],
             ratio_stats=RatioStats(**evidence["ratio_stats"]),
             criteria=[CriteriaRef(**c) for c in evidence["criteria"]],
+            respondent_arguments=[RespondentArgumentGroup(**a) for a in evidence["respondent_arguments"]],
+            evidence_patterns=[
+                EvidencePattern(
+                    **{**p, "ratio_comparison": RatioComparison(**p["ratio_comparison"]) if p["ratio_comparison"] else None}
+                )
+                for p in evidence["evidence_patterns"]
+            ],
         ),
         procedure=Procedure(steps=PROCEDURE_STEPS, documents=build_documents(classified["issues"])),
     )
@@ -252,6 +286,47 @@ async def get_neighborhood(case_id: str):
 
 @app.get("/api/stats", response_model=StatsResponse)
 async def get_stats():
+    """홈 화면의 쟁점별 사례 수뿐 아니라, 통계 탭이 쓰는 코퍼스 규모·전체 배상비율
+    분포·반박 논리 순위·증거 유형별 방향까지 한 번에 반환한다(쟁점 필터 없는
+    전체 코퍼스 집계 4종은 서로 독립적이라 병렬 조회)."""
     driver = app.state.driver
-    data = await asyncio.to_thread(graph_search.stats_overview, driver, NEO4J_DATABASE)
-    return StatsResponse(**data)
+    overview, corpus, overall_dist, basis_overview, evidence_overview = await asyncio.gather(
+        asyncio.to_thread(graph_search.stats_overview, driver, NEO4J_DATABASE),
+        asyncio.to_thread(graph_search.corpus_totals, driver, NEO4J_DATABASE),
+        asyncio.to_thread(graph_search.overall_ratio_distribution, driver, NEO4J_DATABASE),
+        asyncio.to_thread(graph_search.argument_basis_overview, driver, NEO4J_DATABASE),
+        asyncio.to_thread(graph_search.evidence_type_overview, driver, NEO4J_DATABASE),
+    )
+    return StatsResponse(
+        total_cases=overview["total_cases"],
+        issues=overview["issues"],
+        corpus=CorpusTotals(**corpus),
+        overall_ratio_distribution=OverallRatioDistribution(**overall_dist),
+        argument_basis_overview=[ArgumentBasisOverview(**b) for b in basis_overview],
+        evidence_type_overview=[EvidenceTypeOverview(**e) for e in evidence_overview],
+    )
+
+
+_ALLOWED_SCAN_MEDIA_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf"}
+_MAX_SCAN_BYTES = 10 * 1024 * 1024  # 10MB
+
+
+@app.post("/api/document-scan", response_model=DocumentScanResult)
+async def document_scan(file: UploadFile = File(...)):
+    """사용자가 올린 서류 사진/PDF를 Claude 비전으로 판독한다("관련 서류 사진
+    올리기"). 실제 Claude API 이미지 입력을 쓰는 기능 — 이미지에 없는 내용은
+    절대 지어내지 않고, 판독 불가하면 그렇게 응답한다(document_scanner.py)."""
+    if file.content_type not in _ALLOWED_SCAN_MEDIA_TYPES:
+        raise HTTPException(status_code=400, detail=f"지원하지 않는 파일 형식입니다: {file.content_type}")
+
+    contents = await file.read()
+    if not contents:
+        raise HTTPException(status_code=400, detail="빈 파일입니다.")
+    if len(contents) > _MAX_SCAN_BYTES:
+        raise HTTPException(status_code=400, detail="파일 크기가 너무 큽니다(최대 10MB).")
+
+    data_b64 = base64.b64encode(contents).decode()
+    is_pdf = file.content_type == "application/pdf"
+    client = app.state.anthropic
+    result = await asyncio.to_thread(document_scanner.scan_document, client, file.content_type, data_b64, is_pdf)
+    return DocumentScanResult(**result)

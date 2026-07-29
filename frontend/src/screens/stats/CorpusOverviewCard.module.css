@@ -1,0 +1,75 @@
+.card {
+  padding: var(--space-card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-card);
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-tight);
+}
+
+.iconBadge {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius);
+  background: var(--kb-yellow);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.headline {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ink);
+  margin: 0;
+}
+
+.numberChip {
+  display: inline-block;
+  padding: 1px var(--space-tight);
+  border-radius: var(--radius-sm);
+  background: var(--kb-yellow);
+  font-weight: 700;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-tight);
+  margin: 0;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-tight);
+  background: var(--card);
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.label {
+  font-size: 11px;
+  color: var(--slate);
+}
+
+.value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.period {
+  font-size: 11px;
+  color: var(--slate);
+  margin: 0;
+  text-align: center;
+}

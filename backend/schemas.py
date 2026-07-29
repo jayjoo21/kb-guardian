@@ -5,8 +5,24 @@ from typing import Optional
 from pydantic import BaseModel
 
 
+class DocumentScanResult(BaseModel):
+    """업로드한 서류 이미지/PDF 판독 결과. 이미지에 실제로 없는 항목은 null —
+    추론해서 채우지 않는다(backend/services/document_scanner.py)."""
+    readable: bool
+    document_type: str
+    has_signature: Optional[bool] = None
+    signature_note: Optional[str] = None
+    investment_profile_marked: Optional[bool] = None
+    product_name: Optional[str] = None
+    notes: Optional[str] = None
+
+
 class ConsultRequest(BaseModel):
     text: str
+    # 사용자가 결과 화면에서 "이 쟁점이 아니에요"로 직접 고른 쟁점. 있으면 classifier
+    # LLM 호출을 건너뛰고 이 쟁점을 그대로 써서 evidence/answer를 재생성한다
+    # (원문 텍스트는 그대로 두고 쟁점만 강제 지정하는 재분석 흐름).
+    override_issues: Optional[list[str]] = None
 
 
 class Classified(BaseModel):
@@ -43,12 +59,54 @@ class LawArticleRef(BaseModel):
     ref: str
 
 
+class ArgumentSample(BaseModel):
+    """basis 그룹 안의 대표 사례 하나 — 같은 사건(case_id) 안에서 은행 주장과
+    위원회 판단(인용문)을 짝지어 보여주기 위한 단위. quote가 null이면 위원회가
+    이 주장을 직접 인용한 문장이 없다는 뜻(통계만 표시, 인용은 생략). case_no는
+    "금감원 분쟁조정 제○○호" 표시용 공식 사건번호(196건 중 6건은 결측이라 null)."""
+    case_id: str
+    case_no: Optional[str] = None
+    argument: str
+    quote: Optional[str] = None
+
+
+class RespondentArgumentGroup(BaseModel):
+    """"은행은 이렇게 반박합니다" 카드 하나 분량 — basis(반박 근거 유형)별 집계.
+    rejected_rate는 accepted="배척" 비율만이고(일부인정은 0.5로 섞지 않음),
+    일부인정은 partial_count로 별도 표시한다."""
+    basis: str
+    count: int
+    rejected_count: int
+    rejected_rate: float
+    partial_count: int
+    samples: list[ArgumentSample] = []
+
+
+class RatioComparison(BaseModel):
+    with_avg: float
+    with_n: int
+    without_avg: float
+    without_n: int
+
+
+class EvidencePattern(BaseModel):
+    """"이런 자료가 있으면 유리해요" 카드 하나 분량 — Evidence type별 집계."""
+    type: str
+    source_terms: list[str] = []  # 원문에 실제 쓰인 서류/자료 표현 빈출 3개
+    total: int
+    favorable_rate: float
+    unfavorable_rate: float
+    ratio_comparison: Optional[RatioComparison] = None  # 양쪽 n>=10일 때만 채움
+
+
 class Evidence(BaseModel):
     similar_cases: list[SimilarCase] = []
     law_articles: list[LawArticleRef] = []
     precedents: list[str] = []
     ratio_stats: RatioStats = RatioStats()
     criteria: list[CriteriaRef] = []
+    respondent_arguments: list[RespondentArgumentGroup] = []
+    evidence_patterns: list[EvidencePattern] = []
 
 
 class Procedure(BaseModel):
@@ -123,9 +181,57 @@ class IssueStat(BaseModel):
     ratio_stats: RatioStats
 
 
+class DateRange(BaseModel):
+    from_year: int
+    to_year: int
+
+
+class CorpusTotals(BaseModel):
+    """통계 탭/데이터 출처 카드용 — 전체 그래프 기준(쟁점 필터 없음) 노드 건수 + 기간."""
+    precedents: int
+    law_articles: int
+    criteria: int
+    date_range: Optional[DateRange] = None
+
+
+class OverallRatioDistribution(BaseModel):
+    """전체 사례 기준(쟁점 필터 없음) 배상비율 분포 — 통계 탭 히스토그램용.
+    SimulateResponse의 RatioDistribution과 달리 consistency 라벨은 없다(쟁점별
+    일관성 판단이라 전체 통합 분포에는 의미가 없음)."""
+    min: Optional[float] = None
+    median: Optional[float] = None
+    max: Optional[float] = None
+    avg: Optional[float] = None
+    p25: Optional[float] = None
+    p75: Optional[float] = None
+    n: int = 0
+    values: list[float] = []
+
+
+class ArgumentBasisOverview(BaseModel):
+    """"은행이 자주 쓰는 반박 논리" 순위용 — 전체 코퍼스 기준(쟁점 필터 없음) basis별 집계."""
+    basis: str
+    count: int
+    rejected_count: int
+    rejected_rate: float
+
+
+class EvidenceTypeOverview(BaseModel):
+    """"결과를 가르는 자료" 카드용 — 전체 코퍼스 기준(쟁점 필터 없음) EvidenceType별 집계."""
+    type: str
+    source_terms: list[str] = []
+    total: int
+    favorable_rate: float
+    unfavorable_rate: float
+
+
 class StatsResponse(BaseModel):
     total_cases: int
     issues: list[IssueStat]
+    corpus: CorpusTotals
+    overall_ratio_distribution: OverallRatioDistribution
+    argument_basis_overview: list[ArgumentBasisOverview] = []
+    evidence_type_overview: list[EvidenceTypeOverview] = []
 
 
 class RatioDistribution(BaseModel):

@@ -1,0 +1,104 @@
+.card {
+  padding: var(--space-card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-element);
+}
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.subtitle {
+  font-size: 10.5px;
+  color: var(--slate);
+}
+
+.toggle {
+  flex: none;
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  border: none;
+  background: var(--hairline-strong);
+  position: relative;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.toggleOn {
+  background: var(--kb-yellow);
+}
+
+.toggleKnob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.toggleOn .toggleKnob {
+  transform: translateX(18px);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+  padding-top: var(--space-tight);
+  border-top: 1px solid var(--hairline);
+}
+
+.listLabel {
+  font-size: 10.5px;
+  color: var(--slate);
+  margin: 0;
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-tight);
+  padding: var(--space-tight);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.itemIcon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--ink);
+}
+
+.itemTitle {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.itemBody {
+  font-size: 11px;
+  color: var(--slate);
+  margin: 2px 0 0;
+}

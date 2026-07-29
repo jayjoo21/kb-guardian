@@ -1,0 +1,41 @@
+.button {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid var(--hairline-strong);
+  background: var(--paper);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.button:hover {
+  border-color: var(--ink);
+}
+
+.listening {
+  background: var(--kb-yellow);
+  border-color: var(--ink);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--kb-yellow-soft);
+  }
+  50% {
+    box-shadow: 0 0 0 6px var(--kb-yellow-soft);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .listening {
+    animation: none;
+  }
+}

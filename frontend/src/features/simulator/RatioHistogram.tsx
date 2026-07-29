@@ -35,7 +35,7 @@ export function RatioHistogram({ values, median }: RatioHistogramProps) {
             <div
               key={idx}
               className={`${styles.bar} ${isMedianBin ? styles.barMedian : ''}`}
-              style={{ height: `${(count / maxCount) * 100}%` }}
+              style={{ height: `${(count / maxCount) * 100}%`, animationDelay: `${idx * 30}ms` }}
               title={`${rangeStart}~${rangeEnd}%: ${count}건`}
             >
               {count > 0 && <span className={`${styles.count} mono`}>{count}</span>}

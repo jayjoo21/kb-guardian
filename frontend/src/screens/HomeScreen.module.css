@@ -1,0 +1,181 @@
+.home {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-section);
+  padding: var(--space-card) var(--space-card) var(--space-section);
+  background: var(--paper);
+}
+
+.greeting {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.hello {
+  font-size: 13px;
+  color: var(--slate);
+  margin: 0;
+}
+
+.headline {
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.35;
+  margin: 0;
+}
+
+.error {
+  font-size: 12px;
+  color: var(--ink);
+  background: var(--kb-yellow-soft);
+  padding: var(--space-tight) var(--space-element);
+  border-radius: var(--radius);
+  margin: 0;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+}
+
+.sectionLabel {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--slate);
+  margin: 0;
+}
+
+.card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-element);
+  min-height: 44px;
+  padding: var(--space-element);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--card);
+  text-align: left;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+
+.card:hover {
+  border-color: var(--ink);
+  background: var(--surface);
+}
+
+.cardMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cardLabel {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.cardDesc {
+  font-size: 12.5px;
+  color: var(--slate);
+}
+
+.cardRight {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-tight);
+}
+
+.cardBadge {
+  font-size: 11px;
+  color: var(--slate);
+  white-space: nowrap;
+}
+
+.chevron {
+  flex: none;
+  color: var(--slate-faint);
+}
+
+.freeform {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+}
+
+.freeformLabel {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--slate);
+  margin: 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+}
+
+.inputRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-tight);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  min-height: 76px;
+  padding: var(--space-tight) var(--space-element);
+  border: 1.5px solid var(--hairline-strong);
+  border-radius: var(--radius);
+  background: var(--card);
+  font-family: inherit;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: var(--ink);
+  resize: none;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+
+.input::placeholder {
+  color: var(--slate);
+}
+
+.input:focus {
+  border-color: var(--ink);
+  background: var(--paper);
+  outline: none;
+  box-shadow: 0 0 0 3px var(--hairline);
+}
+
+.submit {
+  min-height: 48px;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--kb-yellow);
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+  transition: filter var(--dur-fast) var(--ease-out);
+}
+
+.submit:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+.submit:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

@@ -1,0 +1,111 @@
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-card);
+  padding: var(--space-card);
+  background: var(--paper);
+}
+
+.title {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+
+.empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-card);
+  text-align: center;
+}
+
+.emptyText {
+  font-size: 14px;
+  color: var(--ink);
+  margin: 0;
+}
+
+.startButton {
+  min-height: 44px;
+  padding: 0 var(--space-card);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--kb-yellow);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.list {
+  flex: 1;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+}
+
+.card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-element);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--card);
+  text-align: left;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+
+.card:hover {
+  border-color: var(--ink);
+  background: var(--surface);
+}
+
+.cardDate {
+  font-size: 11px;
+  color: var(--slate);
+}
+
+.cardText {
+  font-size: 13.5px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.cardMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-tight);
+  margin-top: var(--space-1);
+}
+
+.cardIssues,
+.cardRatio {
+  font-size: 11px;
+  color: var(--slate);
+}
+
+.logout {
+  flex: none;
+  min-height: 44px;
+  border: none;
+  background: none;
+  font-size: 13px;
+  color: var(--slate);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

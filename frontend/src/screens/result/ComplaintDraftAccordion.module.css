@@ -1,0 +1,66 @@
+.hint {
+  font-size: 12px;
+  color: var(--slate);
+  margin: 0 0 var(--space-tight);
+}
+
+.draft {
+  margin: 0 0 var(--space-tight);
+  padding: var(--space-element);
+  border-radius: var(--radius);
+  background: var(--card);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.buttonRow {
+  display: flex;
+  gap: var(--space-tight);
+  margin-bottom: var(--space-tight);
+}
+
+.utilButton {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--paper);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.utilButton:hover {
+  background: var(--card);
+}
+
+.submitLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--kb-yellow);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.submitNote {
+  font-size: 10.5px;
+  color: var(--slate);
+  text-align: center;
+  margin: var(--space-1) 0 0;
+}

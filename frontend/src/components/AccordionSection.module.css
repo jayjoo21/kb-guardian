@@ -1,0 +1,81 @@
+.section {
+  padding: 0;
+  overflow: hidden;
+}
+
+.header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-tight);
+  min-height: 52px;
+  padding: var(--space-card);
+  border: none;
+  background: none;
+  text-align: left;
+}
+
+.titleGroup {
+  display: flex;
+  align-items: center;
+  gap: var(--space-tight);
+  min-width: 0;
+}
+
+.iconBadge {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconBadgeAccent {
+  background: var(--kb-yellow);
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.headerRight {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-tight);
+}
+
+.badge {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chevron {
+  flex: none;
+  color: var(--slate);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.content {
+  padding: 0 var(--space-card) var(--space-card);
+}

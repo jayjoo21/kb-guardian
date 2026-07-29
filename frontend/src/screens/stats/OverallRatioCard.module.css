@@ -1,0 +1,51 @@
+.card {
+  padding: var(--space-card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-tight);
+  margin: 0 0 var(--space-1);
+}
+
+.iconBadge {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+
+.headline {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.range {
+  font-size: 12.5px;
+  color: var(--slate);
+  margin: 0 0 var(--space-tight);
+}
+
+.footnote {
+  font-size: 11.5px;
+  color: var(--slate);
+  margin: var(--space-tight) 0 0;
+}

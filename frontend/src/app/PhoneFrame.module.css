@@ -1,0 +1,95 @@
+.page {
+  background: var(--paper);
+}
+
+.aside {
+  display: none;
+}
+
+.frame {
+  position: relative;
+  width: 100%;
+}
+
+.notch {
+  display: none;
+}
+
+.viewport {
+  width: 100%;
+  height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 데스크톱: 중앙 정렬된 폰 프레임 + 옆에 서비스명/설명 */
+@media (min-width: 769px) {
+  .page {
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 56px;
+    padding: 40px;
+    background: #e7e5df;
+  }
+
+  .aside {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-tight);
+    max-width: 260px;
+  }
+
+  .asideName {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .asideTag {
+    font-size: 14px;
+    color: var(--slate);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .frame {
+    flex: none;
+    width: 390px;
+    height: 844px;
+    border-radius: 54px;
+    background: #111214;
+    padding: 14px;
+    box-shadow:
+      0 40px 80px -20px rgba(0, 0, 0, 0.35),
+      0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  .notch {
+    display: block;
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 26px;
+    background: #111214;
+    border-radius: 0 0 16px 16px;
+    z-index: 5;
+  }
+
+  .viewport {
+    height: 100%;
+    border-radius: 40px;
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.08);
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}

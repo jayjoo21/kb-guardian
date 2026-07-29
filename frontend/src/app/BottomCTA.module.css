@@ -1,0 +1,33 @@
+.wrap {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-tight) var(--space-card) var(--space-card);
+  background: var(--paper);
+  border-top: 1px solid var(--hairline);
+}
+
+.cta {
+  width: 100%;
+  min-height: 52px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--kb-yellow);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+  transition:
+    filter var(--dur-fast) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out);
+}
+
+.cta:hover:not(:disabled) {
+  filter: brightness(0.94);
+}
+
+.cta:disabled {
+  opacity: 0.4;
+}

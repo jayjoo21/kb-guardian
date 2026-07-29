@@ -21,7 +21,24 @@
   display: flex;
   justify-content: center;
   cursor: default;
+  transform-origin: bottom;
+  animation: growBar var(--dur-slow) var(--ease-out) backwards;
   transition: background var(--dur-fast) var(--ease-out);
+}
+
+@keyframes growBar {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar {
+    animation: none;
+  }
 }
 
 .bar:hover {

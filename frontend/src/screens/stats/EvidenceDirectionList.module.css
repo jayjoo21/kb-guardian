@@ -1,0 +1,77 @@
+.card {
+  padding: var(--space-card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-tight);
+  margin: 0 0 var(--space-tight);
+}
+
+.iconBadge {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-element);
+  min-height: 40px;
+  border-top: 1px solid var(--hairline);
+}
+
+.row:first-child {
+  border-top: none;
+}
+
+.rowLabel {
+  font-size: 12.5px;
+  color: var(--ink);
+}
+
+.direction {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.favorable {
+  background: var(--kb-yellow-soft);
+  color: var(--ink);
+}
+
+.unfavorable {
+  background: var(--paper);
+  color: var(--slate-faint);
+}

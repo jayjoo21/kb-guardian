@@ -1,0 +1,24 @@
+.enter {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 100%;
+  animation: slideIn var(--dur-base) var(--ease-out);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enter {
+    animation: none;
+  }
+}

@@ -1,14 +1,43 @@
 """Neo4j 그래프 탐색. LLM 호출 없음 — classifier가 뽑은 issues/products로
 scripts/load_graph.py가 적재한 스키마(Case/Issue/Product/Factor/LawArticle/
 Precedent/Respondent/Criteria, HAS_ISSUE/INVOLVES/CITES/CITES_PRECEDENT/
-HAS_FACTOR/HAS_OUTCOME/REFERS_TO/GOVERNED_BY/APPLIES_TO)를 그대로 조회한다.
+HAS_FACTOR/HAS_OUTCOME/REFERS_TO/GOVERNED_BY/APPLIES_TO)와, scripts/load_arguments.py가
+적재한 스키마(Argument/ArgumentBasis/Evidence/EvidenceType, RESPONDENT_ARGUED/
+HAS_BASIS/HAS_EVIDENCE/OF_TYPE)를 그대로 조회한다.
 """
 
 import logging
+import re
+from collections import Counter, defaultdict
+from datetime import date
 
 from neo4j import RoutingControl
 
 logger = logging.getLogger("graph_search")
+
+# Case.date는 원본 크롤링 시점에 따라 "YYYY-MM-DD"와 "YYYY. M. D." 두 형식이 섞여
+# 있어(196건 확인 결과 이 두 패턴으로 100% 커버됨), Cypher의 문자열 min()/max()로는
+# 사전식 정렬 오류가 난다(예: "2026. 4. 8."이 "2004-03-17"보다 문자열상 크게 나옴).
+# 그래서 코퍼스 기간(데이터 출처 카드용)은 Python에서 파싱 후 실제 날짜로 비교한다.
+_CASE_DATE_PATTERNS = [
+    re.compile(r"^(\d{4})-(\d{1,2})-(\d{1,2})$"),
+    re.compile(r"^(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})\.?$"),
+]
+
+
+def _parse_case_date(raw):
+    if not raw:
+        return None
+    s = raw.strip()
+    for pat in _CASE_DATE_PATTERNS:
+        m = pat.match(s)
+        if m:
+            y, mo, d = (int(x) for x in m.groups())
+            try:
+                return date(y, mo, d)
+            except ValueError:
+                return None
+    return None
 
 # 유사 사례: 쟁점 일치 건수 우선, 상품 일치 건수 가중, 최신(date desc) 우선.
 # 사례 하나에 outcome(피신청인)이 여러 개면 ratio가 있는 것 중 가장 높은 것을 대표값으로 쓴다.
@@ -218,6 +247,296 @@ def criteria_for(driver, database: str, issues: list) -> list:
         _QUERY_CRITERIA, {"issues": issues}, database_=database, routing_=RoutingControl.READ,
     )
     return [{"id": r["id"], "title": r["title"], "summary": r["summary"]} for r in records]
+
+
+# ---------------------------------------------------------------------------
+# "은행은 이렇게 반박합니다" / "증거 강도 진단" — scripts/load_arguments.py 스키마 조회
+# ---------------------------------------------------------------------------
+
+# 해당 쟁점이 "인정"된 Case에서만 피신청인이 실제로 편 반박을 모은다(쟁점 자체가
+# 배척된 사례의 반박까지 섞으면 "이 쟁점이 인정될 때 은행이 대는 논리"라는 질문에
+# 답이 안 됨). basis별 집계(표본 최소치·샘플 선정)는 Python에서 처리한다 — Cypher
+# 집계문 안에서 "중복 없는 첫 N개" 로직을 짜는 것보다 명확하고, 표본 규모(전체
+# 450건)에서 성능 문제도 없다.
+_QUERY_RESPONDENT_ARGUMENTS = """
+MATCH (c:Case)-[hi:HAS_ISSUE]->(i:Issue)
+WHERE i.name IN $issues AND hi.result = '인정'
+MATCH (c)-[:RESPONDENT_ARGUED]->(a:Argument)
+RETURN c.id AS case_id, c.case_no AS case_no, a.basis AS basis, a.accepted AS accepted,
+       a.text AS text, a.accepted_quote AS quote, a.accepted_basis AS accepted_basis
+"""
+
+_MIN_ARGUMENT_BASIS_COUNT = 5
+
+
+def respondent_arguments_for_issues(driver, database: str, issues: list) -> list:
+    """쟁점이 인정된 사례들의 피신청인 반박을 basis별로 묶어 반환한다.
+
+    rejected_rate는 accepted가 정확히 "배척"인 비율만 쓰고, "일부인정"은 절반
+    가중치로 섞지 않고 partial_count로 별도 집계한다(요구사항 명시). count<5인
+    basis는 표본 부족으로 제외한다. rejected_rate가 낮을수록(=위원회가 잘 안 받아준
+    반박일수록) 은행 입장에서 강한 논리이므로 오름차순으로 정렬한다.
+
+    samples는 (case_id, case_no, 주장, 위원회 인용문|null) 튜플 — "은행 주장 vs 위원회
+    판단"을 같은 사건 안에서 짝지어 보여주기 위해 case_id/case_no를 함께 넘긴다
+    (case_no는 "금감원 분쟁조정 제○○호" 표시용, 6건은 결측이라 null일 수 있음).
+    인용문이 있는 샘플을 우선 채우고 부족하면 인용문 없는 샘플로 채운다(인용문 없는
+    항목은 화면에서 통계만 표시하고 인용은 생략)."""
+    if not issues:
+        return []
+    records, _, _ = driver.execute_query(
+        _QUERY_RESPONDENT_ARGUMENTS, {"issues": issues}, database_=database, routing_=RoutingControl.READ,
+    )
+
+    by_basis: dict = defaultdict(lambda: {
+        "total": 0, "rejected": 0, "partial": 0, "samples": [], "seen": set(),
+    })
+    for r in records:
+        agg = by_basis[r["basis"]]
+        agg["total"] += 1
+        if r["accepted"] == "배척":
+            agg["rejected"] += 1
+        elif r["accepted"] == "일부인정":
+            agg["partial"] += 1
+        key = (r["case_id"], r["text"])
+        if r["text"] and key not in agg["seen"]:
+            agg["seen"].add(key)
+            has_direct_quote = r["accepted_basis"] == "직접" and bool(r["quote"])
+            agg["samples"].append({
+                "case_id": r["case_id"],
+                "case_no": r["case_no"],
+                "argument": r["text"],
+                "quote": r["quote"] if has_direct_quote else None,
+            })
+
+    results = []
+    for basis, agg in by_basis.items():
+        total = agg["total"]
+        if total < _MIN_ARGUMENT_BASIS_COUNT:
+            continue
+        with_quote = [s for s in agg["samples"] if s["quote"]]
+        without_quote = [s for s in agg["samples"] if not s["quote"]]
+        results.append({
+            "basis": basis,
+            "count": total,
+            "rejected_count": agg["rejected"],
+            "rejected_rate": round(agg["rejected"] / total, 3),
+            "partial_count": agg["partial"],
+            "samples": (with_quote + without_quote)[:2],
+        })
+    results.sort(key=lambda x: x["rejected_rate"])
+    return results
+
+
+# evidence_patterns는 (respondent_arguments와 달리) 쟁점 인정 여부로 필터링하지
+# 않는다 — "이런 자료가 있으면 유리한가"는 결과 인정/배척과 무관하게 그 쟁점의
+# 사례 전체에서 나타난 자료의 패턴이기 때문.
+_QUERY_EVIDENCE_RAW = """
+MATCH (c:Case)-[:HAS_ISSUE]->(i:Issue) WHERE i.name IN $issues
+MATCH (c)-[:HAS_EVIDENCE]->(e:Evidence)
+RETURN e.type AS type, e.source_term AS source_term, e.role AS role
+"""
+
+# existed=true/false 각각의 평균 배상비율(ratio) 비교. type+existed로 암묵적 GROUP BY.
+# 기존 _QUERY_RATIO_STATS/_QUERY_RATIO_DISTRIBUTION과 동일하게 사례당 outcome이 여러 개면
+# (드묾) 별도로 묶지 않고 ho.ratio 행 단위로 집계한다 — 이 프로젝트 전체에서 일관되게
+# 쓰는 배상비율 집계 방식.
+_QUERY_EVIDENCE_RATIO_COMPARISON = """
+MATCH (c:Case)-[:HAS_ISSUE]->(i:Issue) WHERE i.name IN $issues
+MATCH (c)-[:HAS_EVIDENCE]->(e:Evidence)
+MATCH (c)-[ho:HAS_OUTCOME]->(:Respondent) WHERE ho.ratio IS NOT NULL
+RETURN e.type AS type, e.existed AS existed, avg(ho.ratio) AS avg_ratio, count(ho.ratio) AS n
+"""
+
+_MIN_EVIDENCE_TYPE_TOTAL = 10
+_MIN_EVIDENCE_RATIO_N = 10
+
+
+def evidence_patterns_for_issues(driver, database: str, issues: list) -> list:
+    """쟁점 사례들의 증거를 type별로 묶어 반환한다. total<10인 type은 표본 부족으로
+    제외한다. existed=true/false 배상비율 비교는 양쪽 다 n>=10일 때만 채우고,
+    그렇지 않으면 ratio_comparison을 null로 둔다(해피콜_녹취처럼 표본이 3~5건인
+    유형을 절대 절대비교로 노출하지 않기 위함 — 이전 검증에서 확인된 문제)."""
+    if not issues:
+        return []
+    raw_records, _, _ = driver.execute_query(
+        _QUERY_EVIDENCE_RAW, {"issues": issues}, database_=database, routing_=RoutingControl.READ,
+    )
+    by_type: dict = defaultdict(lambda: {"total": 0, "favorable": 0, "unfavorable": 0, "terms": Counter()})
+    for r in raw_records:
+        agg = by_type[r["type"]]
+        agg["total"] += 1
+        if r["role"] == "신청인유리":
+            agg["favorable"] += 1
+        elif r["role"] == "신청인불리":
+            agg["unfavorable"] += 1
+        if r["source_term"]:
+            agg["terms"][r["source_term"]] += 1
+
+    ratio_records, _, _ = driver.execute_query(
+        _QUERY_EVIDENCE_RATIO_COMPARISON, {"issues": issues}, database_=database, routing_=RoutingControl.READ,
+    )
+    ratio_by_type: dict = defaultdict(dict)
+    for r in ratio_records:
+        ratio_by_type[r["type"]][r["existed"]] = {"avg": r["avg_ratio"], "n": r["n"]}
+
+    results = []
+    for etype, agg in by_type.items():
+        total = agg["total"]
+        if total < _MIN_EVIDENCE_TYPE_TOTAL:
+            continue
+        with_stat = ratio_by_type.get(etype, {}).get(True)
+        without_stat = ratio_by_type.get(etype, {}).get(False)
+        ratio_comparison = None
+        if (
+            with_stat and without_stat
+            and with_stat["n"] >= _MIN_EVIDENCE_RATIO_N and without_stat["n"] >= _MIN_EVIDENCE_RATIO_N
+        ):
+            ratio_comparison = {
+                "with_avg": round(with_stat["avg"], 1), "with_n": with_stat["n"],
+                "without_avg": round(without_stat["avg"], 1), "without_n": without_stat["n"],
+            }
+        results.append({
+            "type": etype,
+            "source_terms": [term for term, _ in agg["terms"].most_common(3)],
+            "total": total,
+            "favorable_rate": round(agg["favorable"] / total, 3),
+            "unfavorable_rate": round(agg["unfavorable"] / total, 3),
+            "ratio_comparison": ratio_comparison,
+        })
+    results.sort(key=lambda x: x["favorable_rate"], reverse=True)
+    return results
+
+
+# ---------------------------------------------------------------------------
+# 통계 탭 — 쟁점 필터 없이 전체 코퍼스를 대상으로 한 집계. respondent_arguments_for_issues/
+# evidence_patterns_for_issues와 로직은 같지만 특정 민원(issues)에 매인 것이 아니라
+# "이 서비스가 가진 데이터 전체가 얼마나 되는가"를 보여주는 용도라 필터를 걷어낸 버전.
+# ---------------------------------------------------------------------------
+
+_QUERY_PRECEDENT_COUNT = "MATCH (p:Precedent) RETURN count(p) AS n"
+_QUERY_LAWARTICLE_COUNT = "MATCH (l:LawArticle) RETURN count(l) AS n"
+_QUERY_CRITERIA_COUNT = "MATCH (cr:Criteria) RETURN count(cr) AS n"
+_QUERY_CASE_DATES = "MATCH (c:Case) WHERE c.date IS NOT NULL RETURN c.date AS d"
+
+_QUERY_OVERALL_RATIO_DISTRIBUTION = """
+MATCH (c:Case)-[ho:HAS_OUTCOME]->(:Respondent) WHERE ho.ratio IS NOT NULL
+WITH ho.ratio AS ratio
+RETURN collect(ratio) AS values, min(ratio) AS min, max(ratio) AS max, avg(ratio) AS avg,
+       percentileDisc(ratio, 0.25) AS p25, percentileDisc(ratio, 0.5) AS median,
+       percentileDisc(ratio, 0.75) AS p75, count(ratio) AS n
+"""
+
+_QUERY_ARGUMENT_BASIS_OVERVIEW = """
+MATCH (c:Case)-[:RESPONDENT_ARGUED]->(a:Argument)
+RETURN a.basis AS basis, a.accepted AS accepted
+"""
+
+_QUERY_EVIDENCE_TYPE_OVERVIEW = """
+MATCH (c:Case)-[:HAS_EVIDENCE]->(e:Evidence)
+RETURN e.type AS type, e.source_term AS source_term, e.role AS role
+"""
+
+
+def corpus_totals(driver, database: str) -> dict:
+    """통계 탭/데이터 출처 카드용 — 판례/법조항/분쟁해결기준 건수 + 결정례 기간
+    (전체 그래프 기준, 쟁점 필터 없음)."""
+    def _count(query: str) -> int:
+        records, _, _ = driver.execute_query(query, database_=database, routing_=RoutingControl.READ)
+        return records[0]["n"]
+
+    date_records, _, _ = driver.execute_query(
+        _QUERY_CASE_DATES, database_=database, routing_=RoutingControl.READ,
+    )
+    parsed_dates = [d for d in (_parse_case_date(r["d"]) for r in date_records) if d is not None]
+    date_range = None
+    if parsed_dates:
+        date_range = {"from_year": min(parsed_dates).year, "to_year": max(parsed_dates).year}
+
+    return {
+        "precedents": _count(_QUERY_PRECEDENT_COUNT),
+        "law_articles": _count(_QUERY_LAWARTICLE_COUNT),
+        "criteria": _count(_QUERY_CRITERIA_COUNT),
+        "date_range": date_range,
+    }
+
+
+def overall_ratio_distribution(driver, database: str) -> dict:
+    """전체 사례 기준(쟁점 필터 없음) 배상비율 분포 — 통계 탭 히스토그램용."""
+    records, _, _ = driver.execute_query(
+        _QUERY_OVERALL_RATIO_DISTRIBUTION, database_=database, routing_=RoutingControl.READ,
+    )
+    r = records[0]
+    n = r["n"]
+    if n == 0:
+        return {
+            "min": None, "median": None, "max": None, "avg": None,
+            "p25": None, "p75": None, "n": 0, "values": [],
+        }
+    return {
+        "min": r["min"], "median": r["median"], "max": r["max"], "avg": r["avg"],
+        "p25": r["p25"], "p75": r["p75"], "n": n, "values": sorted(r["values"]),
+    }
+
+
+def argument_basis_overview(driver, database: str) -> list:
+    """"은행이 자주 쓰는 반박 논리" 순위용 — 전체 코퍼스 기준(쟁점 필터 없음) basis별 집계.
+    건수 많은 순 정렬(자주 쓰이는 논리가 위로). count<5인 basis는 표본 부족으로 제외."""
+    records, _, _ = driver.execute_query(
+        _QUERY_ARGUMENT_BASIS_OVERVIEW, database_=database, routing_=RoutingControl.READ,
+    )
+    by_basis: dict = defaultdict(lambda: {"total": 0, "rejected": 0})
+    for r in records:
+        agg = by_basis[r["basis"]]
+        agg["total"] += 1
+        if r["accepted"] == "배척":
+            agg["rejected"] += 1
+
+    results = []
+    for basis, agg in by_basis.items():
+        total = agg["total"]
+        if total < _MIN_ARGUMENT_BASIS_COUNT:
+            continue
+        results.append({
+            "basis": basis,
+            "count": total,
+            "rejected_count": agg["rejected"],
+            "rejected_rate": round(agg["rejected"] / total, 3),
+        })
+    results.sort(key=lambda x: -x["count"])
+    return results
+
+
+def evidence_type_overview(driver, database: str) -> list:
+    """"결과를 가르는 자료" 카드용 — 전체 코퍼스 기준(쟁점 필터 없음) EvidenceType별 집계."""
+    records, _, _ = driver.execute_query(
+        _QUERY_EVIDENCE_TYPE_OVERVIEW, database_=database, routing_=RoutingControl.READ,
+    )
+    by_type: dict = defaultdict(lambda: {"total": 0, "favorable": 0, "unfavorable": 0, "terms": Counter()})
+    for r in records:
+        agg = by_type[r["type"]]
+        agg["total"] += 1
+        if r["role"] == "신청인유리":
+            agg["favorable"] += 1
+        elif r["role"] == "신청인불리":
+            agg["unfavorable"] += 1
+        if r["source_term"]:
+            agg["terms"][r["source_term"]] += 1
+
+    results = []
+    for etype, agg in by_type.items():
+        total = agg["total"]
+        if total < _MIN_EVIDENCE_TYPE_TOTAL:
+            continue
+        results.append({
+            "type": etype,
+            "source_terms": [term for term, _ in agg["terms"].most_common(3)],
+            "total": total,
+            "favorable_rate": round(agg["favorable"] / total, 3),
+            "unfavorable_rate": round(agg["unfavorable"] / total, 3),
+        })
+    results.sort(key=lambda x: x["favorable_rate"], reverse=True)
+    return results
 
 
 _QUERY_CASE_DETAIL = """

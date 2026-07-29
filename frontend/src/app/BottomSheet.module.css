@@ -1,0 +1,66 @@
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: flex-end;
+  background: rgba(26, 29, 41, 0.4);
+  animation: fadeIn var(--dur-fast) var(--ease-out);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.sheet {
+  width: 100%;
+  max-height: 80%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-card);
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  padding: var(--space-tight) var(--space-card) calc(var(--space-card) + env(safe-area-inset-bottom));
+  animation: slideUp var(--dur-base) var(--ease-out);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .sheet {
+    animation: none;
+  }
+}
+
+.handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--hairline-strong);
+}
+
+.close {
+  width: 100%;
+  min-height: 48px;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--paper);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}

@@ -1,0 +1,28 @@
+.card {
+  padding: var(--space-card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+}
+
+.headline {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ink);
+  margin: 0;
+}
+
+.numberChip {
+  display: inline-block;
+  padding: 1px var(--space-tight);
+  border-radius: var(--radius-sm);
+  background: var(--kb-yellow);
+  font-weight: 700;
+}
+
+.aggregate {
+  font-size: 12px;
+  color: var(--slate);
+  margin: var(--space-tight) 0 0;
+}
