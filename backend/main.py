@@ -26,7 +26,7 @@ from backend.schemas import (  # noqa: E402
     LawArticleRef, OverallRatioDistribution, Procedure, RatioComparison, RatioDistribution, RatioStats,
     RespondentArgumentGroup, SimilarCase, SimulateFactorOption, SimulateResponse, StatsResponse,
 )
-from backend.services import answerer, classifier, document_scanner, graph_search, simulator  # noqa: E402
+from backend.services import document_scanner, graph_search, orchestrator, simulator  # noqa: E402
 from common.enums import ISSUE_ENUM  # noqa: E402
 
 load_dotenv()
@@ -43,51 +43,6 @@ NEO4J_URI = os.environ["NEO4J_URI"]
 NEO4J_USERNAME = os.environ["NEO4J_USERNAME"]
 NEO4J_PASSWORD = os.environ["NEO4J_PASSWORD"]
 NEO4J_DATABASE = os.environ.get("NEO4J_DATABASE") or None
-
-# 은행 민원 접수 -> 금융감독원 분쟁조정 절차. 그래프에 없는 일반 절차 안내이므로 정적 데이터로 시작.
-PROCEDURE_STEPS = [
-    "1. 금융회사 고객센터/민원 접수 채널에 먼저 이의를 제기합니다.",
-    "2. 금융회사 자체 민원 처리 절차를 거칩니다(통상 접수 후 약 30일 이내 답변).",
-    "3. 금융회사 답변에 동의하지 않으면 금융감독원 금융소비자보호처에 분쟁조정을 신청합니다"
-    "(금융소비자정보포털 파인, 전화 국번없이 1332, 우편/방문 접수).",
-    "4. 금감원이 양 당사자의 사실관계와 자료를 조사합니다.",
-    "5. 조사 결과를 토대로 금융분쟁조정위원회에 회부해 심의합니다.",
-    "6. 위원회가 조정안을 제시하고, 양 당사자가 이를 수락하면 재판상 화해와 동일한 효력을 가집니다.",
-    "7. 조정이 성립하지 않으면 소송 등 별도 법적 절차를 검토할 수 있습니다.",
-]
-
-# 쟁점 유형별 제출 서류. 그래프에 없는 실무 지식이므로 절차와 마찬가지로 정적 데이터로 시작하되,
-# "제출 서류 안내"를 뭉뚱그리지 말라는 요구 때문에 쟁점별로 구체화한다(주제 설명문 원문 요구사항).
-DOCUMENT_MAP: dict[str, list[str]] = {
-    "설명의무_위반": ["가입신청서(계약서) 사본", "상품설명서", "투자자정보확인서", "상담 녹취록(있는 경우)"],
-    "적합성원칙_위반": ["가입신청서(계약서) 사본", "투자자정보확인서", "상품설명서", "상담 녹취록(있는 경우)"],
-    "적정성원칙_위반": ["가입신청서(계약서) 사본", "투자자정보확인서", "상품설명서"],
-    "부당권유": ["가입신청서(계약서) 사본", "상담 녹취록(있는 경우)", "손실보전각서 등 관련 서면(있는 경우)"],
-    "불완전판매_기타": ["가입신청서(계약서) 사본", "상품설명서", "투자자정보확인서"],
-    "우대금리_미적용": ["가입신청서", "상품설명서(우대금리 조건 명시분)", "통장 거래내역"],
-    "중도해지_불이익": ["예적금 가입신청서", "상품설명서", "중도해지 정산내역서"],
-    "금리인하요구권": ["금리인하요구권 신청서", "소득·재산 증빙자료", "금리 산정내역서"],
-    "임의처리_무단거래": ["계좌·카드 거래내역서", "본인 미승인 확인서(이의제기서)", "고객센터 접수증"],
-    "착오송금": ["송금 이체확인증", "수취인 정보(확인 가능한 범위)", "반환 요청 접수 내역"],
-    "전산장애": ["장애 발생 시각 화면 캡처·로그", "거래 실패 내역", "고객센터 문의 이력"],
-    "보이스피싱_피해보상": ["사건사고사실확인원(경찰 신고접수증)", "이체내역서", "피해구제 신청서"],
-    "담보_보증분쟁": ["대출 약정서", "담보·보증 계약서", "등기사항증명서(해당 시)"],
-    "예금지급_분쟁": ["예금통장·증서 사본", "본인확인서류", "거래내역서"],
-    "수수료_비용분쟁": ["수수료 부과 내역서", "상품설명서(수수료 조항)", "거래내역서"],
-    "약관해석_분쟁": ["약관 사본(해당 조항 표시)", "가입신청서", "관련 상담·안내 이력"],
-    "기타": ["가입신청서(계약서) 사본", "상품설명서", "관련 상담 이력 또는 녹취(있는 경우)"],
-}
-
-
-def build_documents(issues: list) -> list:
-    seen, docs = set(), []
-    for issue in issues or ["기타"]:
-        for doc in DOCUMENT_MAP.get(issue, DOCUMENT_MAP["기타"]):
-            if doc not in seen:
-                seen.add(doc)
-                docs.append(doc)
-    return docs[:6]
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -111,31 +66,6 @@ app.add_middleware(
 )
 
 
-async def _gather_evidence(driver, issues: list, products: list) -> dict:
-    # find_similar_cases 결과(case_ids)가 precedents 조회에 필요하므로 그것만 먼저 실행하고,
-    # 나머지(ratio_stats/law_articles/precedents/criteria/respondent_arguments/evidence_patterns)는
-    # 서로 독립적이므로 병렬 실행한다.
-    similar = await asyncio.to_thread(graph_search.find_similar_cases, driver, NEO4J_DATABASE, issues, products)
-    case_ids = [c["case_id"] for c in similar]
-
-    (
-        ratio_stats, law_articles, precedents, criteria,
-        respondent_arguments, evidence_patterns,
-    ) = await asyncio.gather(
-        asyncio.to_thread(graph_search.ratio_stats_for_issues, driver, NEO4J_DATABASE, issues),
-        asyncio.to_thread(graph_search.law_articles_for_issues, driver, NEO4J_DATABASE, issues),
-        asyncio.to_thread(graph_search.precedents_for_cases, driver, NEO4J_DATABASE, case_ids),
-        asyncio.to_thread(graph_search.criteria_for, driver, NEO4J_DATABASE, issues),
-        asyncio.to_thread(graph_search.respondent_arguments_for_issues, driver, NEO4J_DATABASE, issues),
-        asyncio.to_thread(graph_search.evidence_patterns_for_issues, driver, NEO4J_DATABASE, issues),
-    )
-    return {
-        "similar_cases": similar, "ratio_stats": ratio_stats,
-        "law_articles": law_articles, "precedents": precedents, "criteria": criteria,
-        "respondent_arguments": respondent_arguments, "evidence_patterns": evidence_patterns,
-    }
-
-
 def _sse(event: str, data) -> str:
     return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
 
@@ -148,37 +78,13 @@ def _validate_override_issues(issues):
         raise HTTPException(status_code=400, detail=f"유효하지 않은 쟁점: {invalid}")
 
 
-async def _resolve_classified(req: ConsultRequest, client):
-    """결과 화면에서 "이 쟁점이 아니에요"로 사용자가 직접 고른 쟁점이 있으면 그걸
-    그대로 쓰고(재분류 LLM 호출 생략), 없으면 평소대로 classifier로 분류한다."""
-    if req.override_issues:
-        return {"issues": req.override_issues, "products": [], "factors": []}
-    return await asyncio.to_thread(classifier.classify, client, req.text)
-
-
 async def _consult_stream(req: ConsultRequest, driver, sync_client, async_client):
     t0 = time.perf_counter()
-    classified = await _resolve_classified(req, sync_client)
-    yield _sse("classified", classified)
-    t1 = time.perf_counter()
-
-    evidence = await _gather_evidence(driver, classified["issues"], classified["products"])
-    yield _sse("evidence", evidence)
-    procedure = {"steps": PROCEDURE_STEPS, "documents": build_documents(classified["issues"])}
-    yield _sse("procedure", procedure)
-    t2 = time.perf_counter()
-
-    chunks = []
-    async for delta in answerer.stream_answer(async_client, req.text, evidence):
-        chunks.append(delta)
-        yield _sse("answer_chunk", {"delta": delta})
-    t3 = time.perf_counter()
-
-    yield _sse("done", {"answer": "".join(chunks)})
-    logger.info(
-        "consult(stream) 단계별 소요: classify=%.2fs graph=%.2fs answer=%.2fs total=%.2fs",
-        t1 - t0, t2 - t1, t3 - t2, t3 - t0,
-    )
+    async for event_name, data in orchestrator.run_consult(
+        req.text, req.override_issues, driver, NEO4J_DATABASE, sync_client, async_client,
+    ):
+        yield _sse(event_name, data)
+    logger.info("consult(stream) 완료: %.2fs", time.perf_counter() - t0)
 
 
 @app.post("/api/consult")
@@ -186,8 +92,14 @@ async def consult(req: ConsultRequest):
     """SSE 스트리밍 응답. EventSource는 POST 바디를 지원하지 않으므로 프론트에서는
     fetch()로 요청한 뒤 response.body의 ReadableStream을 직접 읽어 파싱해야 한다.
 
-    이벤트 순서: classified -> evidence -> procedure -> answer_chunk(N회) -> done
-    각 이벤트는 `event: <name>\\ndata: <json>\\n\\n` 형식(표준 SSE)이다.
+    정상 이벤트 순서: agent_step(classify) -> classified -> agent_step(search) ->
+    agent_step(argument_analysis) -> agent_step(evidence_evaluation) -> evidence ->
+    procedure -> agent_step(answer) -> answer_chunk(N회) -> done.
+    분류가 모호하면(①): agent_step(classify, status=needs_clarification) ->
+    needs_clarification으로 끝나고, 프론트가 후보 쟁점 중 하나를 override_issues로
+    다시 요청해야 이어진다. 각 이벤트는 `event: <name>\\ndata: <json>\\n\\n` 형식(표준
+    SSE)이다. 파이프라인 로직 자체는 orchestrator.run_consult()가 갖고 있고, 여기서는
+    SSE로 인코딩만 한다.
     """
     _validate_override_issues(req.override_issues)
     driver = app.state.driver
@@ -202,25 +114,38 @@ async def consult(req: ConsultRequest):
 
 @app.post("/api/consult/sync", response_model=ConsultResponse)
 async def consult_sync(req: ConsultRequest):
-    """비스트리밍 버전. 테스트·폴백용으로 유지(전체 응답을 한 번에 반환)."""
+    """비스트리밍 버전. 테스트·폴백용으로 유지(전체 응답을 한 번에 반환). agent_step
+    이벤트는 로그로 남기고 응답 스키마에는 담지 않는다(ConsultResponse는 그대로)."""
     _validate_override_issues(req.override_issues)
     driver = app.state.driver
     client = app.state.anthropic
 
+    classified = evidence = procedure = None
+    answer_text = ""
+    clarification = None
     t0 = time.perf_counter()
-    classified = await _resolve_classified(req, client)
-    t1 = time.perf_counter()
+    async for event_name, data in orchestrator.run_consult(
+        req.text, req.override_issues, driver, NEO4J_DATABASE, client, app.state.anthropic_async,
+    ):
+        if event_name == "agent_step":
+            logger.info("agent_step[%s]: %s", data["step"], data["decision_reason"])
+        elif event_name == "needs_clarification":
+            clarification = data
+        elif event_name == "classified":
+            classified = data
+        elif event_name == "evidence":
+            evidence = data
+        elif event_name == "procedure":
+            procedure = data
+        elif event_name == "done":
+            answer_text = data["answer"]
+    logger.info("consult/sync 완료: %.2fs", time.perf_counter() - t0)
 
-    evidence = await _gather_evidence(driver, classified["issues"], classified["products"])
-    t2 = time.perf_counter()
-
-    answer_text = await asyncio.to_thread(answerer.answer, client, req.text, evidence)
-    t3 = time.perf_counter()
-
-    logger.info(
-        "consult/sync 단계별 소요: classify=%.2fs graph=%.2fs answer=%.2fs total=%.2fs",
-        t1 - t0, t2 - t1, t3 - t2, t3 - t0,
-    )
+    if clarification is not None:
+        # 분류가 모호해 사용자 확인이 필요한 경로(①) — 이 엔드포인트는 되묻기 UI가 없는
+        # 테스트·폴백용이므로, 후보를 그대로 담아 422로 알려준다(프론트는 /api/consult의
+        # needs_clarification SSE 이벤트로 이 상황을 처리한다).
+        raise HTTPException(status_code=422, detail={"needs_clarification": clarification["candidates"]})
 
     return ConsultResponse(
         classified=Classified(**classified),
@@ -238,8 +163,9 @@ async def consult_sync(req: ConsultRequest):
                 )
                 for p in evidence["evidence_patterns"]
             ],
+            adjacent_issue=evidence["adjacent_issue"],
         ),
-        procedure=Procedure(steps=PROCEDURE_STEPS, documents=build_documents(classified["issues"])),
+        procedure=Procedure(**procedure),
     )
 
 

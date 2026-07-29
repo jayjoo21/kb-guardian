@@ -185,9 +185,30 @@ export interface Evidence {
   criteria: CriteriaRef[]
   respondent_arguments: RespondentArgumentGroup[]
   evidence_patterns: EvidencePattern[]
+  /** 유사 사례가 부족해 함께 검색한 인접 쟁점. 없으면 null(인접 검색이 트리거되지 않음). */
+  adjacent_issue: string | null
+}
+
+/** 오케스트레이터의 다섯 판단 단계. 실제로 일어난 판단만 순서대로 온다(연출 아님) —
+    분류가 모호하면 classify 단계가 status="needs_clarification"으로 오고 이후 단계는
+    오지 않는다(needs_clarification 이벤트로 이어짐). */
+export type AgentStepId = 'classify' | 'search' | 'argument_analysis' | 'evidence_evaluation' | 'answer'
+
+export interface AgentStep {
+  step: AgentStepId
+  status: 'done' | 'needs_clarification'
+  decision_reason: string
+}
+
+/** "혹시 이런 상황에 가까운가요?" 되묻기 후보 — case_count는 그래프 실측 사례 건수(자연수). */
+export interface ClarificationCandidate {
+  issue: string
+  case_count: number
 }
 
 export interface ConsultStreamHandlers {
+  onAgentStep?: (data: AgentStep) => void
+  onNeedsClarification?: (candidates: ClarificationCandidate[]) => void
   onClassified?: (data: Classified) => void
   onEvidence?: (data: Evidence) => void
   onProcedure?: (data: Procedure) => void
@@ -229,6 +250,12 @@ export async function streamConsult(
       return
     }
     switch (eventName) {
+      case 'agent_step':
+        handlers.onAgentStep?.(data as AgentStep)
+        break
+      case 'needs_clarification':
+        handlers.onNeedsClarification?.((data as { candidates: ClarificationCandidate[] }).candidates)
+        break
       case 'classified':
         handlers.onClassified?.(data as Classified)
         break

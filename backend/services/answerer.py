@@ -56,6 +56,29 @@ SYSTEM_PROMPT = """당신은 금융 소비자에게 분쟁조정 관련 참고 �
 - 존댓말을 사용하고, 불필요한 수사(인사말 확장, 반복 요약)를 넣지 마십시오."""
 
 
+# 톤은 오케스트레이터가 그래프 근거량(유사 사례 수·배상비율 표본 수)을 명시적 임계값과
+# 비교해 결정한 뒤 여기로 넘겨준다 — LLM이 스스로 "얼마나 자신 있게 말할지"를 정하지
+# 않는다. 두 톤 모두 본문 수치 언급 금지 등 SYSTEM_PROMPT의 절대 규칙은 그대로 적용된다.
+TONE_ASSERTIVE = """
+
+톤 지침(근거 충분 — 확신 있게 안내):
+이 사안은 유사 사례와 배상비율 표본이 충분히 확보된 경우입니다. "~일 수도 있습니다" 같은
+소극적 표현 대신 "이렇게 준비해 대응하세요" 식으로 구체적이고 확신 있는 어조로 안내하십시오."""
+
+TONE_CAUTIOUS = """
+
+톤 지침(근거 제한적 — 신중하게 안내):
+이 사안은 유사 사례나 배상비율 표본이 적어 참고 정보로서 한계가 있는 경우입니다. 단정적인
+표현을 피하고, 표본이 많지 않아 참고용으로만 봐달라는 취지를 본문에 자연스럽게 포함하며,
+전문가·금융감독원 상담을 한 번 더 명시적으로 권하십시오."""
+
+TONE_BLOCKS = {"assertive": TONE_ASSERTIVE, "cautious": TONE_CAUTIOUS}
+
+
+def _system_prompt_for(tone: str) -> str:
+    return SYSTEM_PROMPT + TONE_BLOCKS.get(tone, TONE_CAUTIOUS)
+
+
 def build_answer_prompt(user_text: str, evidence: dict) -> str:
     return (
         f"[사용자 민원]\n{user_text}\n\n"
@@ -64,7 +87,7 @@ def build_answer_prompt(user_text: str, evidence: dict) -> str:
     )
 
 
-def answer(client: anthropic.Anthropic, user_text: str, evidence: dict) -> str:
+def answer(client: anthropic.Anthropic, user_text: str, evidence: dict, tone: str = "cautious") -> str:
     prompt = build_answer_prompt(user_text, evidence)
     last_err = None
     for attempt in range(1, MAX_RETRIES + 1):
@@ -72,7 +95,7 @@ def answer(client: anthropic.Anthropic, user_text: str, evidence: dict) -> str:
             response = client.messages.create(
                 model=MODEL,
                 max_tokens=MAX_TOKENS,
-                system=SYSTEM_PROMPT,
+                system=_system_prompt_for(tone),
                 messages=[{"role": "user", "content": prompt}],
             )
             text = next((b.text for b in response.content if b.type == "text"), "")
@@ -96,7 +119,9 @@ FALLBACK_TEXT = (
 )
 
 
-async def stream_answer(async_client: anthropic.AsyncAnthropic, user_text: str, evidence: dict):
+async def stream_answer(
+    async_client: anthropic.AsyncAnthropic, user_text: str, evidence: dict, tone: str = "cautious",
+):
     """토큰 단위로 answer 텍스트를 yield하는 SSE 전용 스트리밍 버전.
     아직 한 글자도 내보내기 전에 실패하면 처음부터 재시도하지만, 이미 클라이언트로 일부
     텍스트를 내보낸 뒤 스트림이 끊기면 되돌릴 방법이 없으므로 재시도하지 않고 안내
@@ -109,7 +134,7 @@ async def stream_answer(async_client: anthropic.AsyncAnthropic, user_text: str, 
             async with async_client.messages.stream(
                 model=MODEL,
                 max_tokens=MAX_TOKENS,
-                system=SYSTEM_PROMPT,
+                system=_system_prompt_for(tone),
                 messages=[{"role": "user", "content": prompt}],
             ) as stream:
                 async for text in stream.text_stream:

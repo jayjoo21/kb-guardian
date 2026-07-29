@@ -11,7 +11,14 @@ import { MyConsultScreen } from './screens/MyConsultScreen'
 import { StatsScreen } from './screens/StatsScreen'
 import { ConsultLoadingScreen } from './screens/ConsultLoadingScreen'
 import { ResultScreen } from './screens/ResultScreen'
-import { streamConsult, type Classified, type Evidence, type Procedure } from './lib/api'
+import {
+  streamConsult,
+  type AgentStep,
+  type ClarificationCandidate,
+  type Classified,
+  type Evidence,
+  type Procedure,
+} from './lib/api'
 import { isLoggedIn, logout } from './lib/auth'
 import { saveHistoryEntry, type ConsultHistoryEntry } from './lib/history'
 
@@ -23,6 +30,8 @@ function App() {
   const [procedure, setProcedure] = useState<Procedure | null>(null)
   const [answer, setAnswer] = useState('')
   const [answerDone, setAnswerDone] = useState(false)
+  const [agentSteps, setAgentSteps] = useState<AgentStep[]>([])
+  const [clarification, setClarification] = useState<ClarificationCandidate[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const controllerRef = useRef<AbortController | null>(null)
   const navTimeoutRef = useRef<number | null>(null)
@@ -64,6 +73,8 @@ function App() {
     setProcedure(null)
     setAnswer('')
     setAnswerDone(false)
+    setAgentSteps([])
+    setClarification(null)
     setError(null)
 
     // 스트리밍 타이핑 표시는 하지 않는다 — SSE로 데이터는 계속 받되(단계 체크용),
@@ -71,6 +82,15 @@ function App() {
     streamConsult(
       input,
       {
+        onAgentStep: (step) => {
+          setAgentSteps((prev) => {
+            const rest = prev.filter((s) => s.step !== step.step)
+            return [...rest, step]
+          })
+        },
+        onNeedsClarification: (candidates) => {
+          setClarification(candidates)
+        },
         onClassified: (data) => {
           latestClassified = data
           setClassified(data)
@@ -124,6 +144,11 @@ function App() {
       가도록 한다. */
   function reanalyzeWithIssue(issue: string) {
     nav.replaceTop('consult')
+    runConsult(text, [issue])
+  }
+
+  /** 로딩 화면 되묻기(①) — 사용자가 고른 쟁점으로 파이프라인을 이어간다. */
+  function pickClarification(issue: string) {
     runConsult(text, [issue])
   }
 
@@ -184,9 +209,10 @@ function App() {
         {nav.current === 'consult' && (
           <ConsultLoadingScreen
             query={text}
-            classifiedDone={classified !== null}
-            evidenceDone={evidence !== null}
+            steps={agentSteps}
             answerDone={answerDone}
+            clarification={clarification}
+            onPickClarification={pickClarification}
             onBack={cancelConsult}
           />
         )}

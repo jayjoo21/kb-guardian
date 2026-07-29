@@ -21,6 +21,17 @@
   border-bottom: 1px solid var(--hairline);
 }
 
+.adjacentNotice {
+  margin: 0;
+  padding: var(--space-tight) var(--space-element);
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--card-border);
+  font-size: 13px;
+  color: var(--slate);
+  line-height: 1.45;
+}
+
 .chipsRow {
   display: flex;
   flex-direction: column;

@@ -1,15 +1,25 @@
 import { TopAppBar } from '../app/TopAppBar'
+import type { AgentStep, AgentStepId, ClarificationCandidate } from '../lib/api'
 import styles from './ConsultLoadingScreen.module.css'
 
 interface ConsultLoadingScreenProps {
   query: string
-  classifiedDone: boolean
-  evidenceDone: boolean
+  steps: AgentStep[]
   answerDone: boolean
+  clarification: ClarificationCandidate[] | null
+  onPickClarification: (issue: string) => void
   onBack: () => void
 }
 
-const STAGE_LABELS = ['사건 유형 분석', '유사 결정례 검색', '대응 가이드 생성']
+const STAGE_ORDER: AgentStepId[] = ['classify', 'search', 'argument_analysis', 'evidence_evaluation', 'answer']
+
+const STAGE_LABELS: Record<AgentStepId, string> = {
+  classify: '① 사건 분류',
+  search: '② 결정례 검색',
+  argument_analysis: '③ 쟁점·반박 분석',
+  evidence_evaluation: '④ 증거 평가',
+  answer: '⑤ 대응 전략',
+}
 
 function CheckIcon() {
   return (
@@ -29,18 +39,21 @@ function CheckIcon() {
   )
 }
 
-/** 실제 SSE 이벤트(classified/evidence/done) 도착에 맞춰 3단계가 순차 체크된다.
-    답변이 완성(done)될 때까지 이 화면을 유지하고, 그 뒤 완성된 리포트를 한 번에
-    페이드인한다(스트리밍 타이핑 표시 없음). App.tsx가 답변 완성 후 짧은 지연을
-    두고 result로 전환하므로, 3단계 체크가 화면에 실제로 보인 뒤 넘어간다. */
+/** 실제 백엔드 agent_step 이벤트(오케스트레이터가 매 판단마다 보내는 판단 로그)를
+    그대로 5단계 목록으로 보여준다 — 연출용 타이머가 아니라 실제 도착 순서·내용
+    그대로다. ⑤ 대응 전략은 판단(agent_step) 도착 시 진행 중으로, 답변 스트리밍이
+    실제로 끝난(answerDone) 뒤에야 완료 체크된다. 분류가 모호하면(clarification)
+    단계 목록 대신 되묻기 화면을 보여준다. */
 export function ConsultLoadingScreen({
   query,
-  classifiedDone,
-  evidenceDone,
+  steps,
   answerDone,
+  clarification,
+  onPickClarification,
   onBack,
 }: ConsultLoadingScreenProps) {
-  const doneFlags = [classifiedDone, evidenceDone, answerDone]
+  const byId = new Map(steps.map((s) => [s.step, s]))
+  const doneFlags = STAGE_ORDER.map((id) => (id === 'answer' ? answerDone : byId.has(id)))
   const activeIndex = doneFlags.findIndex((done) => !done)
 
   return (
@@ -49,23 +62,48 @@ export function ConsultLoadingScreen({
       <div className={styles.body}>
         <p className={styles.query}>“{query}”</p>
 
-        <ul className={styles.stages} aria-live="polite">
-          {STAGE_LABELS.map((label, i) => {
-            const done = doneFlags[i]
-            const active = i === activeIndex
-            return (
-              <li
-                key={label}
-                className={`${styles.stage} ${done ? styles.stageDone : ''} ${active ? styles.stageActive : ''}`}
-              >
-                <span className={styles.stageIcon} aria-hidden="true">
-                  {done ? <CheckIcon /> : active ? <span className={styles.spinner} /> : null}
-                </span>
-                <span className={styles.stageLabel}>{label}</span>
-              </li>
-            )
-          })}
-        </ul>
+        {clarification ? (
+          <div className={styles.clarify}>
+            <p className={styles.clarifyTitle}>혹시 이런 상황에 가까운가요?</p>
+            <p className={styles.clarifySubtitle}>가장 가까운 쟁점을 골라주시면 이어서 분석할게요</p>
+            <ul className={styles.clarifyList}>
+              {clarification.map((c) => (
+                <li key={c.issue}>
+                  <button
+                    type="button"
+                    className={styles.clarifyOption}
+                    onClick={() => onPickClarification(c.issue)}
+                  >
+                    <span>{c.issue.replace(/_/g, ' ')}</span>
+                    <span className={styles.clarifyCount}>관련 사례 {c.case_count}건</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <ul className={styles.stages} aria-live="polite">
+            {STAGE_ORDER.map((id, i) => {
+              const done = doneFlags[i]
+              const active = i === activeIndex
+              const reason = byId.get(id)?.decision_reason
+              return (
+                <li
+                  key={id}
+                  className={`${styles.stage} ${done ? styles.stageDone : ''} ${active ? styles.stageActive : ''}`}
+                >
+                  <span className={styles.stageIcon} aria-hidden="true">
+                    {done ? <CheckIcon /> : active ? <span className={styles.spinner} /> : null}
+                  </span>
+                  <span className={styles.stageText}>
+                    <span className={styles.stageLabel}>{STAGE_LABELS[id]}</span>
+                    {reason && (done || active) && <span className={styles.stageReason}>{reason}</span>}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        )}
       </div>
     </div>
   )

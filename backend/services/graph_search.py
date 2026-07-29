@@ -131,6 +131,45 @@ LIMIT 5
 """
 
 
+_QUERY_CASE_COUNTS_FOR_ISSUES = """
+MATCH (c:Case)-[:HAS_ISSUE]->(i:Issue) WHERE i.name IN $issues
+RETURN i.name AS issue, count(DISTINCT c) AS n
+"""
+
+# 분류된 쟁점과 같은 사건에 함께 태깅된 다른 쟁점을 빈도순으로 반환한다("근거 부족 ->
+# 인접 쟁점 재검색"의 후보 소스). exclude에 이미 분류된 쟁점들을 넣어 자기 자신이나
+# 이미 검색 중인 쟁점을 다시 인접 쟁점으로 추천하지 않는다.
+_QUERY_CO_TAGGED_ISSUES = """
+MATCH (c:Case)-[:HAS_ISSUE]->(i1:Issue {name: $issue})
+MATCH (c)-[:HAS_ISSUE]->(i2:Issue)
+WHERE NOT i2.name IN $exclude
+RETURN i2.name AS issue, count(DISTINCT c) AS freq
+ORDER BY freq DESC
+LIMIT $limit
+"""
+
+
+def case_counts_for_issues(driver, database: str, issues: list) -> dict:
+    """쟁점별 실제 사례 건수(자연수) — 분류 모호 시 되묻기 후보를 "확신도 %" 대신
+    "관련 사례 N건"으로 자연수 표현하기 위함(통계 용어를 소비자에게 노출하지 않는다)."""
+    if not issues:
+        return {}
+    records, _, _ = driver.execute_query(
+        _QUERY_CASE_COUNTS_FOR_ISSUES, {"issues": issues}, database_=database, routing_=RoutingControl.READ,
+    )
+    return {r["issue"]: r["n"] for r in records}
+
+
+def co_tagged_issues(driver, database: str, issue: str, exclude: list, limit: int = 1) -> list:
+    """issue와 같은 사건에 가장 자주 함께 태깅된 다른 쟁점을 빈도순으로 반환한다."""
+    records, _, _ = driver.execute_query(
+        _QUERY_CO_TAGGED_ISSUES,
+        {"issue": issue, "exclude": exclude, "limit": limit},
+        database_=database, routing_=RoutingControl.READ,
+    )
+    return [r["issue"] for r in records]
+
+
 def find_similar_cases(driver, database: str, issues: list, products: list, limit: int = 5) -> list:
     if issues:
         query, params = _QUERY_SIMILAR_BY_ISSUE, {"issues": issues, "products": products, "limit": limit}

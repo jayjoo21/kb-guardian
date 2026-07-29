@@ -1,0 +1,31 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-card);
+}
+
+.summaryBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.aiLabel {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px var(--space-tight);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--slate);
+}
+
+.summary {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink);
+  margin: 0;
+}

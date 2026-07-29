@@ -61,6 +61,13 @@ export function ResultScreen({
 
         <DataSourceCard />
 
+        {evidence?.adjacent_issue && (
+          <p className={styles.adjacentNotice} role="note">
+            직접 관련 사례가 적어, 가까운 유형(
+            {evidence.adjacent_issue.replace(/_/g, ' ')})도 함께 참고했어요
+          </p>
+        )}
+
         {chips.length > 0 && (
           <div className={styles.chipsRow}>
             <div className={styles.chips} aria-label="분류된 쟁점·상품">

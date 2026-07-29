@@ -6,14 +6,16 @@ import styles from './KeyFindingsCard.module.css'
 
 interface KeyFindingsCardProps {
   issue: string | null
-  /** 확인된 쟁점 개수 — 집계 문장("쟁점 N개가 확인됐고...")용 */
+  /** 확인된 쟁점 개수 — 집계 문장("쟁점 N개·유사 사례 M건")용 */
   issueCount: number
+  /** 이번 상담에서 조회된 유사 사례 건수(있으면 simulate n 대신 사용) */
+  similarCaseCount?: number
 }
 
 /** 1스크롤 요약의 핵심 카드. 통계 용어(중앙값/IQR/n)는 절대 노출하지 않고 자연수
     문장으로만 표현한다. 예측 점수·확률 게이지는 만들지 않는다 — 실측 분포와 집계
     건수만 보여준다. 데이터가 없으면 카드 자체를 숨긴다. */
-export function KeyFindingsCard({ issue, issueCount }: KeyFindingsCardProps) {
+export function KeyFindingsCard({ issue, issueCount, similarCaseCount }: KeyFindingsCardProps) {
   const [sim, setSim] = useState<SimulateResponse | null>(null)
 
   useEffect(() => {
@@ -42,8 +44,8 @@ export function KeyFindingsCard({ issue, issueCount }: KeyFindingsCardProps) {
       </p>
       <RatioHistogram values={d.values} median={d.median} />
       <p className={styles.aggregate}>
-        입력하신 상황에서 쟁점 {issueCount}개가 확인됐고, 관련 실제 사례가{' '}
-        <CountUp value={d.n} className="mono" />건 있어요
+        쟁점 {issueCount}개·유사 사례{' '}
+        <CountUp value={similarCaseCount ?? d.n} className="mono" />건
       </p>
     </section>
   )

@@ -107,6 +107,9 @@ class Evidence(BaseModel):
     criteria: list[CriteriaRef] = []
     respondent_arguments: list[RespondentArgumentGroup] = []
     evidence_patterns: list[EvidencePattern] = []
+    # 유사 사례가 부족해(orchestrator.MIN_SIMILAR_CASES 미만) 함께 검색한 인접 쟁점.
+    # None이면 인접 쟁점 검색이 트리거되지 않은 것(직접 근거만으로 충분했다는 뜻).
+    adjacent_issue: Optional[str] = None
 
 
 class Procedure(BaseModel):
