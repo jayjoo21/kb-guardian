@@ -5,6 +5,17 @@
   gap: var(--space-tight);
 }
 
+.iconBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--kb-yellow-soft);
+  color: var(--ink);
+}
+
 .headline {
   font-size: 17px;
   font-weight: 600;

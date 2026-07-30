@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent, type KeyboardEvent } from 'react'
+import { FileWarning, Megaphone, ShieldOff, UserX, Ban, type LucideIcon } from 'lucide-react'
 import { fetchStats } from '../lib/api'
 import { MicButton } from '../components/MicButton'
 import { DocumentScanner } from '../components/DocumentScanner'
@@ -12,6 +13,7 @@ interface IssueCard {
   label: string
   desc: string
   query: string
+  icon: LucideIcon
 }
 
 // 데이터가 있는 쟁점만 노출(그래프에 근거가 실제로 있는 것만).
@@ -22,6 +24,7 @@ const ISSUE_CARDS: IssueCard[] = [
     label: '설명의무 위반',
     desc: '상품 위험을 제대로 설명받지 못했어요',
     query: '가입할 때 상품의 위험성에 대한 설명을 제대로 듣지 못했습니다.',
+    icon: FileWarning,
   },
   {
     id: 'solicit',
@@ -29,6 +32,7 @@ const ISSUE_CARDS: IssueCard[] = [
     label: '부당권유',
     desc: '무리하게 가입을 권유받았어요',
     query: '직원이 원금 보장을 약속하며 무리하게 가입을 권유했습니다.',
+    icon: Megaphone,
   },
   {
     id: 'suitability',
@@ -36,6 +40,7 @@ const ISSUE_CARDS: IssueCard[] = [
     label: '적합성원칙 위반',
     desc: '제 투자성향과 맞지 않는 상품이었어요',
     query: '제 투자성향에 맞지 않는 고위험 상품에 가입하게 됐습니다.',
+    icon: UserX,
   },
   {
     id: 'mis-sale',
@@ -43,6 +48,7 @@ const ISSUE_CARDS: IssueCard[] = [
     label: '불완전판매',
     desc: '중요한 내용을 안내받지 못했어요',
     query: '상품의 중요한 내용을 충분히 안내받지 못한 채 가입했습니다.',
+    icon: ShieldOff,
   },
   {
     id: 'unauthorized',
@@ -50,6 +56,7 @@ const ISSUE_CARDS: IssueCard[] = [
     label: '임의처리·무단거래',
     desc: '동의 없이 처리된 거래가 있어요',
     query: '제 동의 없이 임의로 처리된 거래 때문에 손해를 봤습니다.',
+    icon: Ban,
   },
 ]
 
@@ -132,6 +139,7 @@ export function HomeScreen({ onStartConsult, error = null }: HomeScreenProps) {
         <p className={styles.sectionLabel}>어떤 상황인가요?</p>
         {ISSUE_CARDS.map((card) => {
           const count = issueCounts[card.issue]
+          const Icon = card.icon
           return (
             <button
               key={card.id}
@@ -139,6 +147,9 @@ export function HomeScreen({ onStartConsult, error = null }: HomeScreenProps) {
               className={styles.card}
               onClick={() => onStartConsult(card.query)}
             >
+              <span className={styles.cardIcon} aria-hidden="true">
+                <Icon size={18} />
+              </span>
               <span className={styles.cardMain}>
                 <span className={styles.cardLabel}>{card.label}</span>
                 <span className={styles.cardDesc}>{card.desc}</span>

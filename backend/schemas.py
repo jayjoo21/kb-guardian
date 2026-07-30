@@ -142,6 +142,17 @@ class ConsultResponse(BaseModel):
     procedure: Procedure
 
 
+class SimplifyAnswerRequest(BaseModel):
+    """9-1 결과 피드백 "설명이 어려워요" — 재분류·재검색 없이 같은 evidence로 답변만
+    더 쉬운 문장으로 다시 생성한다."""
+    text: str
+    evidence: Evidence
+
+
+class SimplifyAnswerResponse(BaseModel):
+    answer: str
+
+
 class OutcomeDetail(BaseModel):
     respondent: str
     result: Optional[str] = None
@@ -213,6 +224,8 @@ class CorpusTotals(BaseModel):
     law_articles: int
     criteria: int
     date_range: Optional[DateRange] = None
+    # 코퍼스에 실제로 있는 가장 최근 사례 등록일(YYYY-MM-DD) — "최종 갱신일" 표시용 실측값.
+    latest_case_date: Optional[str] = None
 
 
 class OverallRatioDistribution(BaseModel):

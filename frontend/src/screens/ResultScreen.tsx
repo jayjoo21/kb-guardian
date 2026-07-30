@@ -13,8 +13,9 @@ import { ProactiveSuggestions } from './result/ProactiveSuggestions'
 import { PreviousConsultNote } from './result/PreviousConsultNote'
 import { IssuePickerSheet } from './result/IssuePickerSheet'
 import { FeedbackWidget } from './result/FeedbackWidget'
+import { TrustBadge } from '../components/TrustBadge'
 import { addPossessedEvidence, loadHistory } from '../lib/history'
-import type { Classified, Evidence, Procedure } from '../lib/api'
+import { simplifyAnswer, type Classified, type Evidence, type Procedure } from '../lib/api'
 import styles from './ResultScreen.module.css'
 
 interface ResultScreenProps {
@@ -32,6 +33,8 @@ interface ResultScreenProps {
   onReanalyze: (issue: string) => void
   /** 8-1 능동 제안(쟁점 보완) → 기존 쟁점에 더해 재조회(추가 재분석) */
   onAddIssue: (issue: string) => void
+  /** 9-2 데이터 출처 카드 탭 → 통계 탭으로 이동 */
+  onNavigateToStats: () => void
 }
 
 /** 상담 결과 화면 — 이 앱의 핵심. 상단은 항상 보이는 요약 헤더(입력 상황·쟁점 칩),
@@ -50,14 +53,18 @@ export function ResultScreen({
   onHome,
   onReanalyze,
   onAddIssue,
+  onNavigateToStats,
 }: ResultScreenProps) {
   const [showIssuePicker, setShowIssuePicker] = useState(false)
   const [activeTab, setActiveTab] = useState<ResultTabId>('summary')
   const [possessedEvidence, setPossessedEvidence] = useState<string[]>(
     () => loadHistory().find((e) => e.id === historyEntryId)?.possessedEvidence ?? [],
   )
+  // 9-1 "설명이 어려워요" — 같은 evidence로 다시 받은 답변이 있으면 그걸로 덮어써 보여준다.
+  const [simplifiedAnswer, setSimplifiedAnswer] = useState<string | null>(null)
   const chips = [...classified.issues, ...classified.products]
-  const paragraphs = answer.split('\n\n').filter(Boolean)
+  const effectiveAnswer = simplifiedAnswer ?? answer
+  const paragraphs = effectiveAnswer.split('\n\n').filter(Boolean)
   const [summary, ...detailParagraphs] = paragraphs
 
   function handlePickIssue(issue: string) {
@@ -70,13 +77,31 @@ export function ResultScreen({
     if (historyEntryId) addPossessedEvidence(historyEntryId, type)
   }
 
+  /** 9-1 "사례가 더 필요해요" — 그래프상 공동 태깅 빈도가 높은 인접 쟁점이 있으면
+      그 쟁점을 더해 재조회한다(8-1과 같은 추가 재분석 메커니즘 재사용). 인접 쟁점이
+      없으면 false를 반환해 위젯이 "더 찾을 사례가 없다"고 안내하게 한다. */
+  async function handleMoreCases(): Promise<boolean> {
+    const suggestion = evidence?.issue_suggestion
+    if (!suggestion) return false
+    onAddIssue(suggestion.issue)
+    return true
+  }
+
+  async function handleSimplify(): Promise<void> {
+    if (!evidence) throw new Error('근거 데이터가 없습니다')
+    const simplified = await simplifyAnswer(text, evidence)
+    setSimplifiedAnswer(simplified)
+  }
+
   return (
     <div className={styles.screen}>
       <TopAppBar title="상담 결과" onBack={onBack} onHome={onHome} />
       <div className={styles.body}>
+        <TrustBadge />
+
         <p className={styles.userText}>“{text}”</p>
 
-        <DataSourceCard />
+        <DataSourceCard onNavigateToStats={onNavigateToStats} />
 
         {evidence?.adjacent_issue && (
           <p className={styles.adjacentNotice} role="note">
@@ -165,7 +190,8 @@ export function ResultScreen({
         text={text}
         issues={classified.issues}
         onWrongIssue={() => setShowIssuePicker(true)}
-        onGoHome={onHome}
+        onMoreCases={handleMoreCases}
+        onSimplify={handleSimplify}
       />
 
       <div className={styles.actionBar}>

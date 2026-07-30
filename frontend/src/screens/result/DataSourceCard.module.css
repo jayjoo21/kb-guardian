@@ -3,7 +3,14 @@
   flex-direction: column;
 }
 
+.summaryRow {
+  display: flex;
+  align-items: center;
+}
+
 .summary {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: var(--space-1);
@@ -11,10 +18,27 @@
   border: none;
   background: none;
   color: var(--slate);
+  text-align: left;
+}
+
+.summary:hover {
+  color: var(--ink);
 }
 
 .summaryText {
   font-size: 11.5px;
+}
+
+.chevronButton {
+  flex: none;
+  width: 28px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  color: var(--slate);
 }
 
 .chevron {

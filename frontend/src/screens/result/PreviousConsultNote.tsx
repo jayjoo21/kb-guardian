@@ -1,3 +1,4 @@
+import { History } from 'lucide-react'
 import { loadHistory } from '../../lib/history'
 import type { Classified } from '../../lib/api'
 import styles from './PreviousConsultNote.module.css'
@@ -27,6 +28,10 @@ export function PreviousConsultNote({ currentHistoryId, classified, possessedEvi
 
   return (
     <div className={styles.wrap} role="note" aria-label="지난 상담과 비교">
+      <span className={styles.header}>
+        <History size={13} aria-hidden="true" />
+        지난 상담과 비교
+      </span>
       {newIssues.length > 0 && (
         <p className={styles.line}>
           지난 상담과 비교하면 이번엔 <strong>{newIssues.map((i) => i.replace(/_/g, ' ')).join(', ')}</strong>{' '}

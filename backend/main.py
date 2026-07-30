@@ -24,10 +24,10 @@ from backend.schemas import (  # noqa: E402
     ArgumentBasisOverview, Classified, ConsultRequest, ConsultResponse, CorpusTotals, CriteriaRef,
     DocumentScanResult, Evidence, EvidencePattern, EvidenceTypeOverview, GraphNeighborhood, CaseDetail,
     IssueSuggestion, KbTermQuote, LawArticleRef, OverallRatioDistribution, Procedure, RatioComparison,
-    RatioDistribution, RatioStats, RespondentArgumentGroup, SimilarCase, SimulateFactorOption,
-    SimulateResponse, StatsResponse,
+    RatioDistribution, RatioStats, RespondentArgumentGroup, SimilarCase, SimplifyAnswerRequest,
+    SimplifyAnswerResponse, SimulateFactorOption, SimulateResponse, StatsResponse,
 )
-from backend.services import document_scanner, graph_search, orchestrator, simulator  # noqa: E402
+from backend.services import answerer, document_scanner, graph_search, orchestrator, simulator  # noqa: E402
 from common.enums import ISSUE_ENUM  # noqa: E402
 
 load_dotenv()
@@ -170,6 +170,24 @@ async def consult_sync(req: ConsultRequest):
         ),
         procedure=Procedure(**procedure),
     )
+
+
+@app.post("/api/simplify-answer", response_model=SimplifyAnswerResponse)
+async def simplify_answer(req: SimplifyAnswerRequest):
+    """9-1 결과 피드백 "설명이 어려워요" — 재분류·재검색 없이 이미 받은 evidence
+    그대로, 답변만 더 쉬운 문장으로 다시 생성한다. 톤(확신/신중)은 오케스트레이터의
+    ③ 판단과 같은 기준으로 evidence에서 다시 계산한다(별도로 저장해두지 않음)."""
+    n_similar = len(req.evidence.similar_cases)
+    n_ratio = req.evidence.ratio_stats.n
+    high_confidence = (
+        n_similar >= orchestrator.HIGH_CONFIDENCE_MIN_SIMILAR_CASES
+        and n_ratio >= orchestrator.HIGH_CONFIDENCE_MIN_RATIO_N
+    )
+    tone = "assertive" if high_confidence else "cautious"
+    text = await asyncio.to_thread(
+        answerer.answer, app.state.anthropic, req.text, req.evidence.model_dump(), tone, True,
+    )
+    return SimplifyAnswerResponse(answer=text)
 
 
 @app.get("/api/simulate/{issue}", response_model=SimulateResponse)

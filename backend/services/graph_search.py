@@ -489,14 +489,20 @@ def corpus_totals(driver, database: str) -> dict:
     )
     parsed_dates = [d for d in (_parse_case_date(r["d"]) for r in date_records) if d is not None]
     date_range = None
+    latest_case_date = None
     if parsed_dates:
         date_range = {"from_year": min(parsed_dates).year, "to_year": max(parsed_dates).year}
+        # 9-2 데이터 출처 카드용 "최종 갱신일" — 파이프라인 실행 로그를 별도로 남기지
+        # 않으므로, 코퍼스에 실제로 들어있는 가장 최근 사례 등록일을 그대로 쓴다
+        # (지어낸 "마지막 갱신 시각"이 아니라 실측값).
+        latest_case_date = max(parsed_dates).isoformat()
 
     return {
         "precedents": _count(_QUERY_PRECEDENT_COUNT),
         "law_articles": _count(_QUERY_LAWARTICLE_COUNT),
         "criteria": _count(_QUERY_CRITERIA_COUNT),
         "date_range": date_range,
+        "latest_case_date": latest_case_date,
     }
 
 

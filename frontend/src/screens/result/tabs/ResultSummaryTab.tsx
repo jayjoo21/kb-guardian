@@ -31,7 +31,7 @@ export function ResultSummaryTab({
           <div className={styles.summaryHeader}>
             <span className={styles.aiLabel}>
               <Sparkles size={11} aria-hidden="true" />
-              AI 분석 해석
+              AI 분석 해석 · 법률 자문 아님
             </span>
             {loadVoiceGuide() && <SpeakButton text={fullAnswer} />}
           </div>

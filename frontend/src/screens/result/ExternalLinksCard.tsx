@@ -42,9 +42,9 @@ const ACTION_LINKS: ActionLink[] = [
     external: true,
   },
   {
-    label: '금융소비자 콜센터 1332',
+    label: '금융감독원 금융소비자 콜센터 1332',
     href: 'tel:1332',
-    note: '전화 연결됩니다',
+    note: '전화 연결됩니다 · 평일 09:00~18:00(주말·공휴일 휴무)',
     external: false,
   },
 ]

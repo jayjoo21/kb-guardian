@@ -248,6 +248,7 @@ function App() {
             onHome={goHome}
             onReanalyze={reanalyzeWithIssue}
             onAddIssue={addIssueAndReanalyze}
+            onNavigateToStats={() => nav.replaceAll('stats')}
           />
         )}
       </ScreenTransition>

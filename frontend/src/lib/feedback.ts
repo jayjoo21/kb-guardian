@@ -2,7 +2,7 @@
 const FEEDBACK_KEY = 'kb-mirybom-feedback'
 const MAX_ENTRIES = 50
 
-export type FeedbackReason = 'more_cases' | 'different_situation' | 'wrong_issue'
+export type FeedbackReason = 'wrong_issue' | 'more_cases' | 'hard_to_understand'
 
 export interface FeedbackEntry {
   id: string

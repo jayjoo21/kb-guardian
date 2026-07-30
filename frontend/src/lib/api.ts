@@ -25,6 +25,8 @@ export interface CorpusTotals {
   law_articles: number
   criteria: number
   date_range: DateRange | null
+  /** 코퍼스 내 가장 최근 사례 등록일(YYYY-MM-DD) — "최종 갱신일" 표시용 실측값. */
+  latest_case_date: string | null
 }
 
 /** 전체 사례 기준(쟁점 필터 없음) 배상비율 분포 — 통계 탭 히스토그램용. */
@@ -356,6 +358,20 @@ export async function fetchCaseDetail(caseId: string, signal?: AbortSignal): Pro
   const res = await fetch(`${API_BASE}/api/case/${encodeURIComponent(caseId)}`, { signal })
   if (!res.ok) throw new Error(`case 요청 실패 (${res.status})`)
   return res.json()
+}
+
+/** 9-1 결과 피드백 "설명이 어려워요" — 재분류·재검색 없이 같은 evidence로 답변만
+    더 쉬운 문장으로 다시 받는다. */
+export async function simplifyAnswer(text: string, evidence: Evidence, signal?: AbortSignal): Promise<string> {
+  const res = await fetch(`${API_BASE}/api/simplify-answer`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, evidence }),
+    signal,
+  })
+  if (!res.ok) throw new Error(`답변 재생성 요청 실패 (${res.status})`)
+  const data = (await res.json()) as { answer: string }
+  return data.answer
 }
 
 /** 업로드한 서류 이미지/PDF 판독 결과. 이미지에 실제로 없는 항목은 null(추론 없음). */

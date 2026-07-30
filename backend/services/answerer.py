@@ -74,9 +74,21 @@ TONE_CAUTIOUS = """
 
 TONE_BLOCKS = {"assertive": TONE_ASSERTIVE, "cautious": TONE_CAUTIOUS}
 
+# 9-1 결과 피드백 "설명이 어려워요" — 같은 근거(evidence)로 표현만 쉽게 다시 쓴다.
+# 그래프에 없는 내용을 새로 지어내지 않도록 절대 규칙·3겹 구조는 그대로 유지한다.
+SIMPLIFY_BLOCK = """
 
-def _system_prompt_for(tone: str) -> str:
-    return SYSTEM_PROMPT + TONE_BLOCKS.get(tone, TONE_CAUTIOUS)
+쉬운 설명 지침(사용자가 "설명이 어려워요"를 선택해 같은 근거로 다시 요청함):
+전문 용어·한자어 대신 일상적인 표현을 우선 쓰고, 법률 용어가 꼭 필요하면 쉬운 말을 먼저
+쓴 뒤 괄호로만 덧붙이십시오. 문장은 짧게 끊어 쓰고 한 문단에 너무 많은 내용을 넣지
+마십시오. 위의 절대 규칙과 3겹 구조는 그대로 지키되 표현만 더 쉽게 바꾸십시오."""
+
+
+def _system_prompt_for(tone: str, simplify: bool = False) -> str:
+    prompt = SYSTEM_PROMPT + TONE_BLOCKS.get(tone, TONE_CAUTIOUS)
+    if simplify:
+        prompt += SIMPLIFY_BLOCK
+    return prompt
 
 
 def build_answer_prompt(user_text: str, evidence: dict) -> str:
@@ -87,7 +99,9 @@ def build_answer_prompt(user_text: str, evidence: dict) -> str:
     )
 
 
-def answer(client: anthropic.Anthropic, user_text: str, evidence: dict, tone: str = "cautious") -> str:
+def answer(
+    client: anthropic.Anthropic, user_text: str, evidence: dict, tone: str = "cautious", simplify: bool = False,
+) -> str:
     prompt = build_answer_prompt(user_text, evidence)
     last_err = None
     for attempt in range(1, MAX_RETRIES + 1):
@@ -95,7 +109,7 @@ def answer(client: anthropic.Anthropic, user_text: str, evidence: dict, tone: st
             response = client.messages.create(
                 model=MODEL,
                 max_tokens=MAX_TOKENS,
-                system=_system_prompt_for(tone),
+                system=_system_prompt_for(tone, simplify),
                 messages=[{"role": "user", "content": prompt}],
             )
             text = next((b.text for b in response.content if b.type == "text"), "")

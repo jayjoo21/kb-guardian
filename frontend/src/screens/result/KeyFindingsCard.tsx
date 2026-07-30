@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { TrendingUp } from 'lucide-react'
 import { fetchSimulate, type SimulateResponse } from '../../lib/api'
 import { RatioHistogram } from '../../features/simulator/RatioHistogram'
 import { CountUp } from '../../components/CountUp'
@@ -35,6 +36,9 @@ export function KeyFindingsCard({ issue, issueCount, similarCaseCount }: KeyFind
 
   return (
     <section className={`${styles.card} card`} aria-label="비슷한 사례에서는">
+      <span className={styles.iconBadge} aria-hidden="true">
+        <TrendingUp size={15} />
+      </span>
       <p className={styles.headline}>
         비슷한 사례에서 보통{' '}
         <span className={`${styles.numberChip} mono`}>
