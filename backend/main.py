@@ -14,10 +14,11 @@ from pathlib import Path
 
 import anthropic
 from dotenv import load_dotenv
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from neo4j import GraphDatabase
+from neo4j.exceptions import Neo4jError
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from backend.schemas import (  # noqa: E402
@@ -28,6 +29,7 @@ from backend.schemas import (  # noqa: E402
     SimplifyAnswerResponse, SimulateFactorOption, SimulateResponse, StatsResponse,
 )
 from backend.services import answerer, document_scanner, graph_search, orchestrator, simulator  # noqa: E402
+from backend.services.rate_limit import RateLimiter, client_ip  # noqa: E402
 from common.enums import ISSUE_ENUM  # noqa: E402
 
 load_dotenv()
@@ -45,6 +47,16 @@ NEO4J_USERNAME = os.environ["NEO4J_USERNAME"]
 NEO4J_PASSWORD = os.environ["NEO4J_PASSWORD"]
 NEO4J_DATABASE = os.environ.get("NEO4J_DATABASE") or None
 
+_DEFAULT_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
+_extra_origins = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+ALLOWED_ORIGINS = _DEFAULT_ORIGINS + _extra_origins
+
+# 공개 데모 링크의 Anthropic 크레딧 남용 방지(IP 기준, 인메모리). 일반 상담류
+# 엔드포인트는 시간당 10회, 비전 판독(OCR)은 비용이 더 커서 시간당 3회로 별도 제한.
+_consult_limiter = RateLimiter(max_requests=10, window_seconds=3600)
+_scan_limiter = RateLimiter(max_requests=3, window_seconds=3600)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USERNAME, NEO4J_PASSWORD))
@@ -61,10 +73,22 @@ app = FastAPI(title="KB Guardian API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.get("/health")
+async def health():
+    try:
+        app.state.driver.verify_connectivity()
+        neo4j_ok = True
+    except Neo4jError:
+        neo4j_ok = False
+    except Exception:
+        neo4j_ok = False
+    return {"status": "ok" if neo4j_ok else "degraded", "neo4j": neo4j_ok}
 
 
 def _sse(event: str, data) -> str:
@@ -89,7 +113,7 @@ async def _consult_stream(req: ConsultRequest, driver, sync_client, async_client
 
 
 @app.post("/api/consult")
-async def consult(req: ConsultRequest):
+async def consult(req: ConsultRequest, request: Request):
     """SSE 스트리밍 응답. EventSource는 POST 바디를 지원하지 않으므로 프론트에서는
     fetch()로 요청한 뒤 response.body의 ReadableStream을 직접 읽어 파싱해야 한다.
 
@@ -102,6 +126,7 @@ async def consult(req: ConsultRequest):
     SSE)이다. 파이프라인 로직 자체는 orchestrator.run_consult()가 갖고 있고, 여기서는
     SSE로 인코딩만 한다.
     """
+    _consult_limiter.check(client_ip(request))
     _validate_override_issues(req.override_issues)
     driver = app.state.driver
     sync_client = app.state.anthropic
@@ -114,9 +139,10 @@ async def consult(req: ConsultRequest):
 
 
 @app.post("/api/consult/sync", response_model=ConsultResponse)
-async def consult_sync(req: ConsultRequest):
+async def consult_sync(req: ConsultRequest, request: Request):
     """비스트리밍 버전. 테스트·폴백용으로 유지(전체 응답을 한 번에 반환). agent_step
     이벤트는 로그로 남기고 응답 스키마에는 담지 않는다(ConsultResponse는 그대로)."""
+    _consult_limiter.check(client_ip(request))
     _validate_override_issues(req.override_issues)
     driver = app.state.driver
     client = app.state.anthropic
@@ -173,10 +199,11 @@ async def consult_sync(req: ConsultRequest):
 
 
 @app.post("/api/simplify-answer", response_model=SimplifyAnswerResponse)
-async def simplify_answer(req: SimplifyAnswerRequest):
+async def simplify_answer(req: SimplifyAnswerRequest, request: Request):
     """9-1 결과 피드백 "설명이 어려워요" — 재분류·재검색 없이 이미 받은 evidence
     그대로, 답변만 더 쉬운 문장으로 다시 생성한다. 톤(확신/신중)은 오케스트레이터의
     ③ 판단과 같은 기준으로 evidence에서 다시 계산한다(별도로 저장해두지 않음)."""
+    _consult_limiter.check(client_ip(request))
     n_similar = len(req.evidence.similar_cases)
     n_ratio = req.evidence.ratio_stats.n
     high_confidence = (
@@ -259,10 +286,11 @@ _MAX_SCAN_BYTES = 10 * 1024 * 1024  # 10MB
 
 
 @app.post("/api/document-scan", response_model=DocumentScanResult)
-async def document_scan(file: UploadFile = File(...)):
+async def document_scan(request: Request, file: UploadFile = File(...)):
     """사용자가 올린 서류 사진/PDF를 Claude 비전으로 판독한다("관련 서류 사진
     올리기"). 실제 Claude API 이미지 입력을 쓰는 기능 — 이미지에 없는 내용은
     절대 지어내지 않고, 판독 불가하면 그렇게 응답한다(document_scanner.py)."""
+    _scan_limiter.check(client_ip(request))
     if file.content_type not in _ALLOWED_SCAN_MEDIA_TYPES:
         raise HTTPException(status_code=400, detail=f"지원하지 않는 파일 형식입니다: {file.content_type}")
 

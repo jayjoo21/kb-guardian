@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:8000'
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
 
 export interface RatioStats {
   min: number | null
@@ -255,7 +255,9 @@ export async function streamConsult(
     signal,
   })
   if (!res.ok || !res.body) {
-    throw new Error(`consult 요청 실패 (${res.status})`)
+    const body = await res.json().catch(() => null)
+    const detail = typeof body?.detail === 'string' ? body.detail : null
+    throw new Error(detail ?? `consult 요청 실패 (${res.status})`)
   }
 
   const reader = res.body.getReader()
