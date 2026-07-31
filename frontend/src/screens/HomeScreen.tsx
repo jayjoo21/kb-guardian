@@ -130,9 +130,9 @@ export function HomeScreen({ onStartConsult, onNavigateToRights, onNavigateToSta
             <Shield size={14} className={styles.heroBadgeIcon} />
             <span className={styles.heroBadgeText}>AI 진단</span>
           </div>
-          <h2 className={styles.heroTitle}>분쟁 예방 AI 진단</h2>
+          <h2 className={styles.heroTitle}>내 상황, 근거로 진단하기</h2>
           <p className={styles.heroDesc}>
-            소비자 권익을 지키는 KB 미리봄
+            실제 분쟁조정 사례를 바탕으로 내 상황을 분석해 드려요
           </p>
           <button 
             type="button" 

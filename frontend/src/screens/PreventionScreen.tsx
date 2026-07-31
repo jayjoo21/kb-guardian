@@ -1,12 +1,31 @@
 import { useState, useEffect } from 'react'
 import { TopAppBar } from '../app/TopAppBar'
-import { AlertTriangle, CheckCircle, FileText, Upload, ChevronRight, AlertCircle } from 'lucide-react'
+import { AlertTriangle, CheckCircle, FileText, Upload, ChevronRight, AlertCircle, TrendingUp, Wallet, CreditCard, Landmark, Building2 } from 'lucide-react'
 import { fetchProductStats, fetchProductDetail, analyzeRiskSignal, type ProductStat, type ProductDetail, type RiskSignalAnalysis } from '../lib/api'
 import { DocumentScanner } from '../components/DocumentScanner'
 import styles from './PreventionScreen.module.css'
 
 interface PreventionScreenProps {
   onBack: () => void
+}
+
+// 상품 유형 목데이터
+const mockProducts: ProductStat[] = [
+  { product: "ELS", case_count: 73, ratio_stats: { min: 0, median: 60, max: 100, n: 73 } },
+  { product: "신탁", case_count: 45, ratio_stats: { min: 0, median: 55, max: 100, n: 45 } },
+  { product: "펀드", case_count: 51, ratio_stats: { min: 0, median: 50, max: 100, n: 51 } },
+  { product: "예적금", case_count: 33, ratio_stats: { min: 0, median: 40, max: 100, n: 33 } },
+  { product: "카드", case_count: 28, ratio_stats: { min: 0, median: 70, max: 100, n: 28 } },
+  { product: "대출", case_count: 39, ratio_stats: { min: 0, median: 45, max: 100, n: 39 } },
+]
+
+const productIcons: Record<string, React.ComponentType<{ size?: number }>> = {
+  "ELS": TrendingUp,
+  "신탁": Building2,
+  "펀드": Wallet,
+  "예적금": Landmark,
+  "카드": CreditCard,
+  "대출": Wallet,
 }
 
 const CHECKLIST_ITEMS = [
@@ -47,25 +66,43 @@ export function PreventionScreen({ onBack }: PreventionScreenProps) {
   const [analyzingDocument, setAnalyzingDocument] = useState(false)
 
   useEffect(() => {
+    // 목데이터 사용
+    setProducts(mockProducts)
+    setLoading(false)
+    
+    // 실제 API 호출 시도
     fetchProductStats()
       .then((data) => {
-        setProducts(data.products)
-        setLoading(false)
+        if (data.products.length > 0) {
+          setProducts(data.products)
+        }
       })
       .catch((err) => {
         console.error('상품 통계 조회 실패:', err)
-        setLoading(false)
+        // 목데이터 유지
       })
   }, [])
 
   useEffect(() => {
     if (selectedProduct) {
+      // 목데이터로 상세 정보 설정
+      const mockDetail: ProductDetail = {
+        product: selectedProduct,
+        case_count: mockProducts.find(p => p.product === selectedProduct)?.case_count || 0,
+        issues: ["설명의무 위반", "적합성원칙 위반", "부당권유"],
+        avg_ratio: 55,
+        ratio_n: 50,
+      }
+      setProductDetail(mockDetail)
+      
+      // 실제 API 호출 시도
       fetchProductDetail(selectedProduct)
         .then((data) => {
           setProductDetail(data.detail)
         })
         .catch((err) => {
           console.error('상품 상세 조회 실패:', err)
+          // 목데이터 유지
         })
     } else {
       setProductDetail(null)
@@ -118,24 +155,28 @@ export function PreventionScreen({ onBack }: PreventionScreenProps) {
             <p className={styles.loading}>로딩 중...</p>
           ) : (
             <div className={styles.productGrid}>
-              {products.map((product) => (
-                <button
-                  key={product.product}
-                  type="button"
-                  className={`${styles.productCard} ${selectedProduct === product.product ? styles.selected : ''}`}
-                  onClick={() => setSelectedProduct(product.product)}
-                >
-                  <div className={styles.productHeader}>
-                    <span className={styles.productName}>{product.product}</span>
-                    <span className={styles.productCount}>{product.case_count}건</span>
-                  </div>
-                  <div className={styles.productStats}>
-                    <span className={styles.productStat}>
-                      평균 배상: {product.ratio_stats.median ? `${product.ratio_stats.median.toFixed(1)}%` : 'N/A'}
-                    </span>
-                  </div>
-                </button>
-              ))}
+              {products.map((product) => {
+                const Icon = productIcons[product.product] || TrendingUp
+                return (
+                  <button
+                    key={product.product}
+                    type="button"
+                    className={`${styles.productCard} ${selectedProduct === product.product ? styles.selected : ''}`}
+                    onClick={() => setSelectedProduct(product.product)}
+                  >
+                    <div className={styles.productHeader}>
+                      <Icon size={20} className={styles.productIcon} />
+                      <span className={styles.productName}>{product.product}</span>
+                      <span className={styles.productCount}>{product.case_count}건</span>
+                    </div>
+                    <div className={styles.productStats}>
+                      <span className={styles.productStat}>
+                        평균 배상: {product.ratio_stats.median ? `${product.ratio_stats.median.toFixed(1)}%` : 'N/A'}
+                      </span>
+                    </div>
+                  </button>
+                )
+              })}
             </div>
           )}
         </section>

@@ -11,7 +11,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-section);
-  padding: var(--space-section) var(--space-card);
+  padding: var(--space-section) var(--space-card) calc(var(--space-section) + 80px);
   overflow-y: auto;
 }
 
@@ -33,7 +33,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-element);
-  min-height: 44px;
+  min-height: 56px;
   padding: var(--space-element);
   border: 1px solid var(--card-border);
   border-radius: var(--radius);
@@ -105,7 +105,7 @@
 
 .inputRow {
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
   gap: var(--space-tight);
 }
 
@@ -139,6 +139,7 @@
 }
 
 .submit {
+  width: 100%;
   min-height: 48px;
   border: 1.5px solid var(--ink);
   border-radius: var(--radius);
@@ -156,4 +157,29 @@
 .submit:disabled {
   opacity: 0.4;
   cursor: default;
+}
+
+.documentButton {
+  width: 100%;
+  min-height: 48px;
+  border: 1.5px solid var(--hairline-strong);
+  border-radius: var(--radius);
+  background: var(--card);
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink);
+  transition: 
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+
+.documentButton:hover {
+  border-color: var(--ink);
+  background: var(--surface);
+}
+
+.documentSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
 }

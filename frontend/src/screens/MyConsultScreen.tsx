@@ -21,7 +21,7 @@ function statusBadge(entry: ConsultHistoryEntry): { label: string; strong: boole
   const nSimilar = entry.evidence?.similar_cases.length ?? 0
   const nRatio = entry.evidence?.ratio_stats.n ?? 0
   const strong = nSimilar >= HIGH_CONFIDENCE_MIN_SIMILAR_CASES && nRatio >= HIGH_CONFIDENCE_MIN_RATIO_N
-  return strong ? { label: '근거 충분', strong: true } : { label: '참고용', strong: false }
+  return strong ? { label: '근거 충분', strong: true } : { label: '분석 완료', strong: false }
 }
 
 function formatDate(iso: string): string {
@@ -38,8 +38,52 @@ function formatDate(iso: string): string {
 export function MyConsultScreen({ onOpenEntry, onStartConsult, onOpenSettings }: MyConsultScreenProps) {
   const [entries, setEntries] = useState<ConsultHistoryEntry[]>([])
 
+  // 목데이터
+  const mockEntries: ConsultHistoryEntry[] = [
+    {
+      id: "mock-1",
+      text: "ELS 상품 관련 설명 의무 위반 상담",
+      timestamp: new Date("2024-03-15T10:30:00").toISOString(),
+      issues: ["설명의무 위반"],
+      classified: { issues: ["설명의무 위반"], confidence: 0.85 },
+      answer: "해당 상황은 설명의무 위반으로 판단됩니다.",
+      evidence: {
+        similar_cases: [
+          { case_id: "제2023-1호", ratio: 60, summary: "ELS 상품 설명 의무 위반" },
+          { case_id: "제2022-3호", ratio: 55, summary: "파생상품 설명 부족" },
+        ],
+        ratio_stats: { min: 0, median: 60, max: 100, n: 73 },
+        law_articles: [{ ref: "금융소비자보호법 제17조", article: "제17조", content: "설명의무" }],
+      },
+      procedure: null,
+      checkedDocuments: [],
+    },
+    {
+      id: "mock-2",
+      text: "펀드 가입 시 부당 권유 관련 상담",
+      timestamp: new Date("2024-03-10T14:20:00").toISOString(),
+      issues: ["부당권유"],
+      classified: { issues: ["부당권유"], confidence: 0.78 },
+      answer: "해당 상황은 부당권유로 판단됩니다.",
+      evidence: {
+        similar_cases: [
+          { case_id: "제2023-3호", ratio: 50, summary: "부당권유 사례" },
+        ],
+        ratio_stats: { min: 0, median: 50, max: 100, n: 51 },
+        law_articles: [{ ref: "금융소비자보호법 제18조", article: "제18조", content: "부당권유 금지" }],
+      },
+      procedure: null,
+      checkedDocuments: [],
+    },
+  ]
+
   useEffect(() => {
-    setEntries(loadHistory())
+    const loaded = loadHistory()
+    if (loaded.length === 0) {
+      setEntries(mockEntries)
+    } else {
+      setEntries(loaded)
+    }
   }, [])
 
   return (
@@ -86,7 +130,7 @@ export function MyConsultScreen({ onOpenEntry, onStartConsult, onOpenSettings }:
                 <li key={entry.id}>
                   <button type="button" className={styles.card} onClick={() => onOpenEntry(entry)}>
                     <div className={styles.cardTop}>
-                      <span className={styles.cardDate}>{formatDate(entry.createdAt)}</span>
+                      <span className={styles.cardDate}>{formatDate(entry.timestamp)}</span>
                       <span className={`${styles.badge} ${badge.strong ? styles.badgeStrong : ''}`}>
                         {badge.label}
                       </span>
@@ -96,13 +140,13 @@ export function MyConsultScreen({ onOpenEntry, onStartConsult, onOpenSettings }:
                       {entry.issues.length > 0 && (
                         <span className={styles.cardIssues}>{entry.issues.join(', ')}</span>
                       )}
-                      {entry.medianRatio !== null && (
-                        <span className={styles.cardRatio}>배상비율 약 {entry.medianRatio}%</span>
+                      {entry.evidence?.ratio_stats.median && (
+                        <span className={styles.cardRatio}>배상비율 약 {entry.evidence.ratio_stats.median}%</span>
                       )}
                     </div>
-                    {ratios.length > 0 && entry.medianRatio !== null && (
+                    {ratios.length > 0 && entry.evidence?.ratio_stats.median && (
                       <div className={styles.cardHistogram}>
-                        <RatioHistogram values={ratios} median={entry.medianRatio} />
+                        <RatioHistogram values={ratios} median={entry.evidence.ratio_stats.median} />
                       </div>
                     )}
                   </button>
@@ -114,6 +158,12 @@ export function MyConsultScreen({ onOpenEntry, onStartConsult, onOpenSettings }:
           <ProgressTracker />
         </>
       )}
+
+      <footer className={styles.legalNotice}>
+        <p className={styles.legalText}>
+          ※ 법률 자문이 아닌 참고 정보입니다. 실제 법적 절차는 전문가와 상담하세요.
+        </p>
+      </footer>
     </div>
   )
 }

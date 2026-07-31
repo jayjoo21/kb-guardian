@@ -11,7 +11,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-section);
-  padding: var(--space-section) var(--space-card) calc(var(--space-section) + 70px);
+  padding: var(--space-section) var(--space-card) calc(var(--space-section) + 80px);
   overflow-y: auto;
 }
 
@@ -102,14 +102,20 @@
 
 .productHeader {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 8px;
+}
+
+.productIcon {
+  color: var(--kb-yellow);
+  flex: none;
 }
 
 .productName {
   font-size: 13px;
   font-weight: 600;
   color: var(--ink);
+  flex: 1;
 }
 
 .productCount {

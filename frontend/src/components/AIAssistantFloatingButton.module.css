@@ -2,14 +2,7 @@
   position: fixed;
   bottom: 80px;
   right: 16px;
-  z-index: 100;
-}
-
-@media (min-width: 769px) {
-  .container {
-    bottom: 24px;
-    right: 24px;
-  }
+  z-index: 50;
 }
 
 .floatingButton {

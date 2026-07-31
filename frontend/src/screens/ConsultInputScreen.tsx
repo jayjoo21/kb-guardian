@@ -149,7 +149,9 @@ export function ConsultInputScreen({ onStartConsult, onBack }: ConsultInputScree
             </button>
           </form>
 
-          <DocumentScanner />
+          <div className={styles.documentSection}>
+            <DocumentScanner />
+          </div>
         </section>
       </div>
 

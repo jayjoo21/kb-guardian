@@ -3,7 +3,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-section);
-  padding: 0 var(--space-card) calc(var(--space-section) + 56px); /* 탭바 높이만큼 하단 패딩 추가 */
+  padding: 0 var(--space-card) calc(var(--space-section) + 80px);
   background: var(--paper);
   overflow-y: auto;
 }
