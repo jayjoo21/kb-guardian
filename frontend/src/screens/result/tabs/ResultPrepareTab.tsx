@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { ExternalLink, Route, ShieldAlert } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { ExternalLink, Route, ShieldAlert, Calendar, Clock } from 'lucide-react'
 import { AccordionSection } from '../../../components/AccordionSection'
 import { Checkbox } from '../../../components/Checkbox'
 import { EvidencePatternsAccordion } from '../EvidencePatternsAccordion'
@@ -11,6 +11,18 @@ import styles from './ResultPrepareTab.module.css'
 
 const TIMELINE_STAGES = ['자료 정리', '은행 민원', '금감원 분쟁조정', '결과 확인']
 const CURRENT_STAGE_INDEX = 0
+
+// 기한 계산을 위한 헬퍼 함수
+function calculateRemainingDays(targetDate: Date): number {
+  const today = new Date()
+  const diffTime = targetDate.getTime() - today.getTime()
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  return diffDays
+}
+
+function formatDate(date: Date): string {
+  return date.toISOString().split('T')[0]
+}
 
 // 실제 존재를 확인한 공식 URL만 쓴다(가짜 링크 없음).
 const STAGE_LINKS = [
@@ -60,6 +72,41 @@ export function ResultPrepareTab({
   const [checkedDocs, setCheckedDocs] = useState<string[]>(
     () => loadHistory().find((e) => e.id === historyEntryId)?.checkedDocuments ?? [],
   )
+  
+  // 기한 계산 상태
+  const [contractDate, setContractDate] = useState<string>('')
+  const [awarenessDate, setAwarenessDate] = useState<string>('')
+  const [remainingDays, setRemainingDays] = useState<{
+    oneYear: number | null
+    fiveYears: number | null
+    threeYears: number | null
+  }>({
+    oneYear: null,
+    fiveYears: null,
+    threeYears: null,
+  })
+
+  function handleDateChange() {
+    if (awarenessDate) {
+      const awareness = new Date(awarenessDate)
+      const oneYearLater = new Date(awareness)
+      oneYearLater.setFullYear(oneYearLater.getFullYear() + 1)
+      const threeYearsLater = new Date(awareness)
+      threeYearsLater.setFullYear(threeYearsLater.getFullYear() + 3)
+      
+      setRemainingDays({
+        oneYear: calculateRemainingDays(oneYearLater),
+        fiveYears: contractDate ? calculateRemainingDays(new Date(new Date(contractDate).setFullYear(new Date(contractDate).getFullYear() + 5))) : null,
+        threeYears: calculateRemainingDays(threeYearsLater),
+      })
+    } else {
+      setRemainingDays({ oneYear: null, fiveYears: null, threeYears: null })
+    }
+  }
+
+  useEffect(() => {
+    handleDateChange()
+  }, [contractDate, awarenessDate])
 
   function toggleDocument(doc: string) {
     const next = !checkedDocs.includes(doc)
@@ -138,6 +185,86 @@ export function ResultPrepareTab({
           )}
         </PrepareSection>
       )}
+
+      {/* 기한 안내 카드 */}
+      <PrepareSection title="법적 기한 안내" icon={<Clock size={16} />}>
+        <div className={styles.deadlineCalculator}>
+          <p className={styles.deadlineNotice}>
+            ※ 법률 자문이 아닌 참고 정보입니다. 실제 법적 절차는 전문가와 상담하세요.
+          </p>
+          
+          <div className={styles.dateInputSection}>
+            <div className={styles.dateInputGroup}>
+              <label className={styles.dateLabel}>
+                <Calendar size={14} className={styles.dateIcon} />
+                위반 사실을 안 날
+              </label>
+              <input
+                type="date"
+                className={styles.dateInput}
+                value={awarenessDate}
+                onChange={(e) => setAwarenessDate(e.target.value)}
+              />
+            </div>
+            
+            <div className={styles.dateInputGroup}>
+              <label className={styles.dateLabel}>
+                <Calendar size={14} className={styles.dateIcon} />
+                계약 체결일 (선택)
+              </label>
+              <input
+                type="date"
+                className={styles.dateInput}
+                value={contractDate}
+                onChange={(e) => setContractDate(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {awarenessDate && (
+            <div className={styles.deadlineResults}>
+              <div className={styles.deadlineItem}>
+                <span className={styles.deadlineTitle}>위법계약해지권 (1년)</span>
+                <span className={styles.deadlineValue}>
+                  {remainingDays.oneYear !== null && remainingDays.oneYear > 0 
+                    ? `${remainingDays.oneYear}일 남음` 
+                    : remainingDays.oneYear !== null && remainingDays.oneYear <= 0 
+                    ? '기간 만료' 
+                    : '날짜를 입력해주세요'}
+                </span>
+              </div>
+              
+              {contractDate && remainingDays.fiveYears !== null && (
+                <div className={styles.deadlineItem}>
+                  <span className={styles.deadlineTitle}>위법계약해지권 (5년)</span>
+                  <span className={styles.deadlineValue}>
+                    {remainingDays.fiveYears > 0 
+                      ? `${remainingDays.fiveYears}일 남음` 
+                      : '기간 만료'}
+                  </span>
+                </div>
+              )}
+              
+              <div className={styles.deadlineItem}>
+                <span className={styles.deadlineTitle}>손해배상청구권 (3년)</span>
+                <span className={styles.deadlineValue}>
+                  {remainingDays.threeYears !== null && remainingDays.threeYears > 0 
+                    ? `${remainingDays.threeYears}일 남음` 
+                    : remainingDays.threeYears !== null && remainingDays.threeYears <= 0 
+                    ? '기간 만료' 
+                    : '날짜를 입력해주세요'}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {!awarenessDate && (
+            <p className={styles.dateHint}>
+              위반 사실을 안 날을 입력하면 남은 기간을 계산해 드려요.
+            </p>
+          )}
+        </div>
+      </PrepareSection>
 
       <PrepareSection title="위법계약해지권 안내" icon={<ShieldAlert size={16} />}>
         <p className={styles.legalNotice}>

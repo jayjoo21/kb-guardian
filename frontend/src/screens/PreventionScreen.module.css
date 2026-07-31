@@ -1,0 +1,501 @@
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-section);
+  padding: var(--space-section) var(--space-card) calc(var(--space-section) + 70px);
+  overflow-y: auto;
+}
+
+.introSection {
+  padding: 0;
+}
+
+.introBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--kb-yellow-soft);
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.introBadgeIcon {
+  color: var(--kb-yellow);
+}
+
+.introBadgeText {
+  color: var(--ink);
+}
+
+.introTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 6px 0;
+}
+
+.introDesc {
+  font-size: 13px;
+  color: var(--slate);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.productSection {
+  padding: 0;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 var(--space-tight) 0;
+}
+
+.loading {
+  font-size: 13px;
+  color: var(--slate);
+  margin: 0;
+}
+
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-tight);
+}
+
+.productCard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-element);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--card);
+  cursor: pointer;
+  transition: 
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+
+.productCard:hover {
+  border-color: var(--ink);
+  background: var(--surface);
+}
+
+.productCard.selected {
+  border-color: var(--kb-yellow);
+  background: var(--kb-yellow-soft);
+}
+
+.productHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.productName {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.productCount {
+  font-size: 11px;
+  color: var(--slate);
+}
+
+.productStats {
+  display: flex;
+  gap: var(--space-tight);
+}
+
+.productStat {
+  font-size: 11px;
+  color: var(--slate);
+}
+
+.detailSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-element);
+  padding: 0;
+}
+
+.statCard {
+  padding: var(--space-element);
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+}
+
+.statRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+}
+
+.statRow:not(:last-child) {
+  border-bottom: 1px solid var(--hairline);
+}
+
+.statLabel {
+  font-size: 12px;
+  color: var(--slate);
+}
+
+.statValue {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.issuesCard {
+  padding: var(--space-element);
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+}
+
+.issuesTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 var(--space-tight) 0;
+}
+
+.issuesList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.issueTag {
+  display: inline-block;
+  padding: 4px 8px;
+  background: var(--kb-yellow-soft);
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.checklistSection {
+  padding: 0;
+}
+
+.checklist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+}
+
+.checklistItem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-element);
+  padding: var(--space-element);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--card);
+  cursor: pointer;
+  transition: 
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+
+.checklistItem:hover {
+  border-color: var(--ink);
+  background: var(--surface);
+}
+
+.checklistItem.checked {
+  border-color: var(--kb-yellow);
+  background: var(--kb-yellow-soft);
+}
+
+.checklistIcon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.emptyCheck {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--hairline-strong);
+  border-radius: 50%;
+}
+
+.checklistContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.checklistQuestion {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.checklistDescription {
+  font-size: 11px;
+  color: var(--slate);
+}
+
+.documentSection {
+  padding: 0;
+}
+
+.documentHint {
+  font-size: 12px;
+  color: var(--slate);
+  margin: 0 0 var(--space-tight) 0;
+  line-height: 1.4;
+}
+
+.uploadArea {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-element);
+}
+
+.fileInput {
+  display: none;
+}
+
+.uploadButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--kb-yellow);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  transition: filter var(--dur-fast) var(--ease-out);
+}
+
+.uploadButton:hover {
+  filter: brightness(0.92);
+}
+
+.uploadIcon {
+  color: var(--ink);
+}
+
+.analyzing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: var(--space-element);
+  background: var(--card);
+  border-radius: var(--radius);
+}
+
+.analyzingSpinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--hairline);
+  border-top-color: var(--kb-yellow);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.analyzingText {
+  font-size: 12px;
+  color: var(--slate);
+}
+
+.riskAnalysisResult {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-element);
+}
+
+.riskSummary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: var(--space-tight) var(--space-element);
+  background: var(--kb-yellow-soft);
+  border-radius: var(--radius-sm);
+}
+
+.riskSummaryIcon {
+  color: var(--kb-yellow);
+  flex: none;
+}
+
+.riskSummaryText {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.signalList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+}
+
+.signalCard {
+  padding: var(--space-element);
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.signalHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.signalType {
+  display: inline-block;
+  padding: 4px 8px;
+  background: var(--kb-yellow-soft);
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.signalOriginal {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.signalOriginalLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--slate);
+}
+
+.signalOriginalText {
+  font-size: 12px;
+  color: var(--ink);
+  line-height: 1.4;
+  font-style: italic;
+}
+
+.signalExplanation {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.signalExplanationLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--slate);
+}
+
+.signalExplanationText {
+  font-size: 12px;
+  color: var(--slate);
+  line-height: 1.4;
+}
+
+.noSignals {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-element);
+  padding: var(--space-section) var(--space-card);
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--card-border);
+  text-align: center;
+}
+
+.noSignalsIcon {
+  color: var(--slate);
+}
+
+.noSignalsText {
+  font-size: 12px;
+  color: var(--slate);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.hintSection {
+  padding: 0;
+}
+
+.hintCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-element);
+  padding: var(--space-section) var(--space-card);
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--card-border);
+  text-align: center;
+}
+
+.hintIcon {
+  color: var(--kb-yellow);
+}
+
+.hintTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.hintDesc {
+  font-size: 12px;
+  color: var(--slate);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.legalNotice {
+  padding: var(--space-section) var(--space-card) 0;
+  margin-top: auto;
+}
+
+.legalText {
+  font-size: 11px;
+  color: var(--slate);
+  text-align: center;
+  margin: 0;
+  line-height: 1.4;
+}

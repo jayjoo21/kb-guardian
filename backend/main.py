@@ -23,12 +23,14 @@ from neo4j.exceptions import Neo4jError
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from backend.schemas import (  # noqa: E402
     ArgumentBasisOverview, Classified, ConsultRequest, ConsultResponse, CorpusTotals, CriteriaRef,
-    DocumentScanResult, Evidence, EvidencePattern, EvidenceTypeOverview, GraphNeighborhood, CaseDetail,
-    IssueSuggestion, KbTermQuote, LawArticleRef, OverallRatioDistribution, Procedure, RatioComparison,
-    RatioDistribution, RatioStats, RespondentArgumentGroup, SimilarCase, SimplifyAnswerRequest,
-    SimplifyAnswerResponse, SimulateFactorOption, SimulateResponse, StatsResponse,
+    ConsumerRightsResponse, DocumentScanResult, Evidence, EvidencePattern, EvidenceTypeOverview, 
+    GraphNeighborhood, CaseDetail, IssueSuggestion, KbTermQuote, LawArticleRef, OverallRatioDistribution, 
+    Procedure, ProductDetailResponse, ProductStatsResponse, RatioComparison, RatioDistribution, RatioStats, 
+    RespondentArgumentGroup, SimilarCase, SimplifyAnswerRequest, SimplifyAnswerResponse, 
+    SimulateFactorOption, SimulateResponse, StatsResponse, RiskSignalAnalysisResponse, LearningContentResponse,
+    ChatRequest, ChatResponse,
 )
-from backend.services import answerer, document_scanner, graph_search, orchestrator, simulator  # noqa: E402
+from backend.services import answerer, document_scanner, graph_search, orchestrator, simulator, risk_signal_scanner, ai_assistant  # noqa: E402
 from backend.services.rate_limit import RateLimiter, client_ip  # noqa: E402
 from common.enums import ISSUE_ENUM  # noqa: E402
 
@@ -47,7 +49,7 @@ NEO4J_USERNAME = os.environ["NEO4J_USERNAME"]
 NEO4J_PASSWORD = os.environ["NEO4J_PASSWORD"]
 NEO4J_DATABASE = os.environ.get("NEO4J_DATABASE") or None
 
-_DEFAULT_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
+_DEFAULT_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5174", "http://127.0.0.1:5174", "http://localhost:5175", "http://127.0.0.1:5175"]
 _extra_origins = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "").split(",") if o.strip()]
 ALLOWED_ORIGINS = _DEFAULT_ORIGINS + _extra_origins
 
@@ -305,3 +307,143 @@ async def document_scan(request: Request, file: UploadFile = File(...)):
     client = app.state.anthropic
     result = await asyncio.to_thread(document_scanner.scan_document, client, file.content_type, data_b64, is_pdf)
     return DocumentScanResult(**result)
+
+
+@app.get("/api/consumer-rights", response_model=ConsumerRightsResponse)
+async def consumer_rights():
+    """소비자 권리 정보를 제공하는 엔드포인트 - 금소법 조문 기반"""
+    driver = app.state.driver
+    
+    # 금소법 관련 법조문 조회
+    all_articles = await asyncio.to_thread(graph_search.all_law_articles, driver, NEO4J_DATABASE)
+    
+    # 소비자 권리 정의 (금소법 조문 기반)
+    rights = [
+        {
+            "id": "cancellation",
+            "title": "청약철회권",
+            "description": "금융상품 가입 후 일정 기간 내에 계약을 철회할 수 있는 권리",
+            "when_to_use": "가입한 지 얼마 안 된 상품이 마음에 들지 않거나, 가입 과정에서 충분한 설명을 듣지 못했을 때",
+            "how_to_exercise": "가입일로부터 일정 기간 내(보험은 15일, 투자성 상품은 제한될 수 있음) 서면으로 철회 의사를 통지하면 됩니다",
+            "law_article_ref": "금융소비자보호법 제46조",
+            "law_article_detail": None,
+        },
+        {
+            "id": "contract_cancellation",
+            "title": "위법계약해지권",
+            "description": "금융회사가 법을 위반하여 판매한 계약을 해지할 수 있는 권리",
+            "when_to_use": "설명의무 위반, 적합성원칙 위반, 부당권유 등 판매원칙 위반이 있었을 때",
+            "how_to_exercise": "위반 사실을 안 날부터 1년, 계약일부터 5년 이내에 해지 요청을 하면 됩니다",
+            "law_article_ref": "금융소비자보호법 제47조",
+            "law_article_detail": None,
+        },
+        {
+            "id": "record_access",
+            "title": "자료열람요구권",
+            "description": "금융회사에 거래 관련 자료(녹취, 적합성 기록 등)의 열람을 요구할 수 있는 권리",
+            "when_to_use": "거래 내용을 확인하거나 분쟁 대비를 위해 증거 자료가 필요할 때",
+            "how_to_exercise": "영업점 방문 또는 서면/전자문서로 열람 요청을 하면 됩니다. 금융회사는 7일 이내에 응답해야 합니다",
+            "law_article_ref": "금융소비자보호법 제28조",
+            "law_article_detail": None,
+        },
+        {
+            "id": "damages",
+            "title": "손해배상청구권",
+            "description": "금융회사의 위법 행위로 입은 손해에 대해 배상을 청구할 수 있는 권리",
+            "when_to_use": "설명의무 위반 등 금융회사의 불완전판매로 손해를 입었을 때",
+            "how_to_exercise": "금융회사에 배상을 청구하거나 금융감독원 분쟁조정을 신청할 수 있습니다. 설명의무 위반 시 입증책임은 금융회사에 있습니다",
+            "law_article_ref": "금융소비자보호법 제44조, 제45조",
+            "law_article_detail": None,
+        },
+        {
+            "id": "dispute_resolution",
+            "title": "분쟁조정 신청",
+            "description": "금융감독원에 분쟁조정을 신청하여 공정한 해결을 요청할 수 있는 권리",
+            "when_to_use": "금융회사와의 직접 협의가 원만히 해결되지 않을 때",
+            "how_to_exercise": "금융감독원 홈페이지 또는 방문 신청을 통해 분쟁조정을 신청할 수 있습니다. 무료로 이용할 수 있습니다",
+            "law_article_ref": "금융소비자보호법 제36조",
+            "law_article_detail": None,
+        },
+    ]
+    
+    # 법조문 세부 정보 매핑 (데이터가 있는 경우)
+    for right in rights:
+        # 해당 조문 찾기
+        matching_articles = [a for a in all_articles if right["law_article_ref"] in a.get("ref", "")]
+        if matching_articles:
+            right["law_article_detail"] = {
+                "ref": matching_articles[0]["ref"],
+                "article": matching_articles[0].get("article", ""),
+                "content": matching_articles[0].get("content", ""),
+            }
+    
+    return ConsumerRightsResponse(rights=rights)
+
+
+@app.get("/api/product-stats", response_model=ProductStatsResponse)
+async def product_stats():
+    """상품별 분쟁 통계를 제공하는 엔드포인트"""
+    driver = app.state.driver
+    products = await asyncio.to_thread(graph_search.product_stats, driver, NEO4J_DATABASE)
+    return ProductStatsResponse(products=[ProductStat(**p) for p in products])
+
+
+@app.get("/api/product/{product_name}", response_model=ProductDetailResponse)
+async def product_detail(product_name: str):
+    """특정 상품의 상세 정보를 제공하는 엔드포인트"""
+    driver = app.state.driver
+    detail = await asyncio.to_thread(graph_search.product_details, driver, NEO4J_DATABASE, product_name)
+    if detail is None:
+        raise HTTPException(status_code=404, detail=f"product={product_name} 없음")
+    return ProductDetailResponse(detail=ProductDetail(**detail))
+
+
+@app.post("/api/risk-signal-analysis", response_model=RiskSignalAnalysisResponse)
+async def risk_signal_analysis(request: Request, file: UploadFile = File(...)):
+    """문서에서 위험 신호를 분석하는 엔드포인트"""
+    _scan_limiter.check(client_ip(request))
+    if file.content_type not in _ALLOW_SCAN_MEDIA_TYPES:
+        raise HTTPException(status_code=400, detail=f"지원하지 않는 파일 형식입니다: {file.content_type}")
+
+    contents = await file.read()
+    if not contents:
+        raise HTTPException(status_code=400, detail="빈 파일입니다.")
+    if len(contents) > _MAX_SCAN_BYTES:
+        raise HTTPException(status_code=400, detail="파일 크기가 너무 큽니다(최대 10MB).")
+
+    data_b64 = base64.b64encode(contents).decode()
+    is_pdf = file.content_type == "application/pdf"
+    client = app.state.anthropic
+    result = await asyncio.to_thread(risk_signal_scanner.analyze_risk_signals, client, file.content_type, data_b64, is_pdf)
+    return RiskSignalAnalysisResponse(analysis=result)
+
+
+@app.get("/api/learning-content", response_model=LearningContentResponse)
+async def learning_content():
+    """학습용 콘텐츠를 제공하는 엔드포인트"""
+    driver = app.state.driver
+    points = await asyncio.to_thread(graph_search.learning_points, driver, NEO4J_DATABASE)
+    terms = await asyncio.to_thread(graph_search.learning_terms, driver, NEO4J_DATABASE)
+    return LearningContentResponse(
+        points=[LearningPoint(**p) for p in points],
+        terms=[LearningTerm(**t) for t in terms],
+    )
+
+
+@app.post("/api/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest):
+    """AI 도우미 채팅 엔드포인트"""
+    driver = app.state.driver
+    client = app.state.anthropic
+    
+    # 용어 사전 조회
+    term_dictionary = await asyncio.to_thread(graph_search.learning_terms, driver, NEO4J_DATABASE)
+    
+    result = await asyncio.to_thread(
+        ai_assistant.chat_with_assistant,
+        client,
+        request.message,
+        term_dictionary,
+        request.current_evidence,
+    )
+    return ChatResponse(**result)

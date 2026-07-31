@@ -198,3 +198,93 @@
   color: var(--ink);
   font-weight: 700;
 }
+
+/* 기한 계산기 스타일 */
+.deadlineCalculator {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-element);
+}
+
+.deadlineNotice {
+  font-size: 11px;
+  color: var(--slate);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.dateInputSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+}
+
+.dateInputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dateLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.dateIcon {
+  color: var(--kb-yellow);
+}
+
+.dateInput {
+  padding: 8px 12px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--card);
+}
+
+.dateInput:focus {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 2px var(--hairline);
+}
+
+.deadlineResults {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+  padding: var(--space-tight);
+  background: var(--kb-yellow-soft);
+  border-radius: var(--radius-sm);
+}
+
+.deadlineItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-element);
+}
+
+.deadlineTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.deadlineValue {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.dateHint {
+  font-size: 11px;
+  color: var(--slate);
+  margin: 0;
+  line-height: 1.4;
+}

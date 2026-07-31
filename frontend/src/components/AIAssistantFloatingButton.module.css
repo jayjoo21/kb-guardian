@@ -1,0 +1,243 @@
+.container {
+  position: fixed;
+  bottom: 80px;
+  right: 16px;
+  z-index: 100;
+}
+
+@media (min-width: 769px) {
+  .container {
+    bottom: 24px;
+    right: 24px;
+  }
+}
+
+.floatingButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--kb-yellow);
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: transform var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+  color: var(--ink);
+}
+
+.floatingButton:hover {
+  transform: scale(1.05);
+  background: var(--kb-yellow);
+  filter: brightness(0.92);
+}
+
+.floatingButton.open {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.chatPanel {
+  position: absolute;
+  bottom: 72px;
+  right: 0;
+  width: 320px;
+  max-height: 480px;
+  background: var(--card);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideUp 0.3s var(--ease-out);
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chatHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--kb-yellow);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.chatHeaderContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chatIcon {
+  color: var(--ink);
+}
+
+.chatTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--ink);
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.closeButton:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.chatMessages {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  overflow-y: auto;
+  max-height: 320px;
+}
+
+.welcomeMessage {
+  padding: 12px;
+  background: var(--kb-yellow-soft);
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+.welcomeText {
+  font-size: 13px;
+  color: var(--ink);
+  margin: 0 0 4px 0;
+  font-weight: 600;
+}
+
+.welcomeHint {
+  font-size: 11px;
+  color: var(--slate);
+  margin: 0;
+}
+
+.message {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.userMessage {
+  align-items: flex-end;
+}
+
+.assistantMessage {
+  align-items: flex-start;
+}
+
+.messageContent {
+  max-width: 85%;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.userMessage .messageContent {
+  background: var(--kb-yellow);
+  align-self: flex-end;
+}
+
+.assistantMessage .messageContent {
+  background: var(--surface);
+  align-self: flex-start;
+}
+
+.messageText {
+  font-size: 13px;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.messageSource {
+  font-size: 10px;
+  color: var(--slate);
+  margin: 0;
+  font-style: italic;
+}
+
+.chatInput {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--hairline);
+  background: var(--card);
+}
+
+.input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--ink);
+  box-shadow: 0 0 0 2px var(--hairline);
+}
+
+.input::placeholder {
+  color: var(--slate);
+}
+
+.input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sendButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--kb-yellow);
+  cursor: pointer;
+  color: var(--ink);
+  transition: filter var(--dur-fast) var(--ease-out);
+}
+
+.sendButton:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+.sendButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

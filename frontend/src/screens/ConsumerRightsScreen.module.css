@@ -1,0 +1,228 @@
+.container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-section);
+  padding: 0 var(--space-card) calc(var(--space-section) + 56px); /* 탭바 높이만큼 하단 패딩 추가 */
+  background: var(--paper);
+  overflow-y: auto;
+}
+
+.loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--slate);
+}
+
+.error {
+  padding: var(--space-element);
+  background: var(--kb-yellow-soft);
+  border-radius: var(--radius);
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-element);
+  padding-bottom: var(--space-element);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.headerIcon {
+  flex: none;
+  color: var(--kb-yellow);
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 4px 0;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--slate);
+  margin: 0;
+}
+
+.rightsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+}
+
+.rightCard {
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--card);
+  overflow: hidden;
+  transition: 
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+
+.rightCard:hover {
+  border-color: var(--ink);
+  background: var(--surface);
+}
+
+.rightHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-element);
+  padding: var(--space-element);
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.rightHeaderContent {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-element);
+  min-width: 0;
+  flex: 1;
+}
+
+.rightIcon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--kb-yellow-soft);
+  border-radius: 50%;
+  color: var(--ink);
+}
+
+.rightTitleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.rightTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.rightDescription {
+  font-size: 13px;
+  color: var(--slate);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.rightDetails {
+  padding: 0 var(--space-element) var(--space-element);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-element);
+}
+
+.detailSection {
+  padding: var(--space-tight);
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+}
+
+.detailHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--space-tight);
+}
+
+.detailIcon {
+  color: var(--kb-yellow);
+}
+
+.detailTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.detailText {
+  font-size: 13px;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.lawSection {
+  padding: var(--space-tight);
+  background: var(--kb-yellow-soft);
+  border-radius: var(--radius-sm);
+}
+
+.lawHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: var(--space-tight);
+}
+
+.lawIcon {
+  color: var(--ink);
+}
+
+.lawTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.lawRef {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 var(--space-tight) 0;
+}
+
+.lawContent {
+  padding-top: var(--space-tight);
+  border-top: 1px solid var(--hairline);
+}
+
+.lawArticle {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 4px 0;
+}
+
+.lawText {
+  font-size: 12px;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.legalNotice {
+  padding: var(--space-section) var(--space-card) 0;
+  margin-top: auto;
+}
+
+.legalText {
+  font-size: 11px;
+  color: var(--slate);
+  text-align: center;
+  margin: 0;
+  line-height: 1.4;
+}

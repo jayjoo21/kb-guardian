@@ -11,7 +11,12 @@ import { MyConsultScreen } from './screens/MyConsultScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
 import { StatsScreen } from './screens/StatsScreen'
 import { ConsultLoadingScreen } from './screens/ConsultLoadingScreen'
+import { ConsultInputScreen } from './screens/ConsultInputScreen'
 import { ResultScreen } from './screens/ResultScreen'
+import { ConsumerRightsScreen } from './screens/ConsumerRightsScreen'
+import { PreventionScreen } from './screens/PreventionScreen'
+import { LearningScreen } from './screens/LearningScreen'
+import { AIAssistantFloatingButton } from './components/AIAssistantFloatingButton'
 import {
   streamConsult,
   type AgentStep,
@@ -140,8 +145,12 @@ function App() {
   }
 
   function startConsult(input: string) {
-    nav.push('consult')
-    runConsult(input)
+    if (input) {
+      nav.push('consult')
+      runConsult(input)
+    } else {
+      nav.push('consult-input')
+    }
   }
 
   /** 결과 화면에서 "이 쟁점이 아니에요" → 다른 쟁점 선택 → 그 쟁점으로 강제
@@ -216,7 +225,16 @@ function App() {
         {nav.current === 'signup' && (
           <SignupScreen onBack={nav.back} onSignedUp={() => nav.replaceAll('home')} />
         )}
-        {nav.current === 'home' && <HomeScreen onStartConsult={startConsult} error={error} />}
+        {nav.current === 'home' && (
+          <HomeScreen 
+            onStartConsult={startConsult} 
+            onNavigateToRights={() => nav.push('consumer-rights')}
+            onNavigateToStats={() => nav.replaceAll('stats')}
+            onNavigateToPrevention={() => nav.push('prevention')}
+            onNavigateToLearning={() => nav.push('learning')}
+            error={error} 
+          />
+        )}
         {nav.current === 'my-consult' && (
           <MyConsultScreen
             onOpenEntry={viewHistoryEntry}
@@ -226,6 +244,18 @@ function App() {
         )}
         {nav.current === 'settings' && <SettingsScreen onBack={nav.back} onLogout={handleLogout} />}
         {nav.current === 'stats' && <StatsScreen />}
+        {nav.current === 'consumer-rights' && <ConsumerRightsScreen onBack={nav.back} />}
+        {nav.current === 'prevention' && <PreventionScreen onBack={nav.back} />}
+        {nav.current === 'learning' && <LearningScreen onBack={nav.back} onStartConsult={startConsult} />}
+        {nav.current === 'consult-input' && (
+          <ConsultInputScreen
+            onStartConsult={(input) => {
+              nav.replaceTop('consult')
+              runConsult(input)
+            }}
+            onBack={nav.back}
+          />
+        )}
         {nav.current === 'consult' && (
           <ConsultLoadingScreen
             query={text}
@@ -252,6 +282,12 @@ function App() {
           />
         )}
       </ScreenTransition>
+
+      <AIAssistantFloatingButton
+        currentEvidence={evidence}
+        onNavigateToScreen={(screen) => nav.push(screen)}
+        onStartConsult={startConsult}
+      />
 
       {isTabScreen(nav.current) && <BottomTabBar active={nav.current} onChange={nav.replaceAll} />}
     </PhoneFrame>

@@ -1,5 +1,8 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
 
+// 디버깅용: API_BASE 확인
+console.log('API_BASE:', API_BASE)
+
 export interface RatioStats {
   min: number | null
   median: number | null
@@ -70,6 +73,161 @@ export interface StatsResponse {
 export async function fetchStats(): Promise<StatsResponse> {
   const res = await fetch(`${API_BASE}/api/stats`)
   if (!res.ok) throw new Error(`stats 요청 실패 (${res.status})`)
+  return res.json()
+}
+
+export interface LawArticleDetail {
+  ref: string
+  article: string
+  content: string
+}
+
+export interface ConsumerRight {
+  id: string
+  title: string
+  description: string
+  when_to_use: string
+  how_to_exercise: string
+  law_article_ref: string
+  law_article_detail: LawArticleDetail | null
+}
+
+export interface ConsumerRightsResponse {
+  rights: ConsumerRight[]
+}
+
+export async function fetchConsumerRights(): Promise<ConsumerRightsResponse> {
+  console.log('fetchConsumerRights 호출, API_BASE:', API_BASE)
+  const url = `${API_BASE}/api/consumer-rights`
+  console.log('요청 URL:', url)
+  
+  try {
+    const res = await fetch(url)
+    console.log('응답 상태:', res.status, res.statusText)
+    
+    if (!res.ok) {
+      const errorText = await res.text()
+      console.error('API 에러:', errorText)
+      throw new Error(`consumer-rights 요청 실패 (${res.status}): ${errorText}`)
+    }
+    
+    const data = await res.json()
+    console.log('API 응답 데이터:', data)
+    return data
+  } catch (error) {
+    console.error('fetchConsumerRights 에러:', error)
+    throw error
+  }
+}
+
+export interface ProductStat {
+  product: string
+  case_count: number
+  ratio_stats: RatioStats
+}
+
+export interface ProductStatsResponse {
+  products: ProductStat[]
+}
+
+export async function fetchProductStats(): Promise<ProductStatsResponse> {
+  const res = await fetch(`${API_BASE}/api/product-stats`)
+  if (!res.ok) throw new Error(`product-stats 요청 실패 (${res.status})`)
+  return res.json()
+}
+
+export interface ProductDetail {
+  product: string
+  case_count: number
+  issues: string[]
+  avg_ratio: number | null
+  ratio_n: number
+}
+
+export interface ProductDetailResponse {
+  detail: ProductDetail
+}
+
+export async function fetchProductDetail(productName: string): Promise<ProductDetailResponse> {
+  const res = await fetch(`${API_BASE}/api/product/${encodeURIComponent(productName)}`)
+  if (!res.ok) throw new Error(`product-detail 요청 실패 (${res.status})`)
+  return res.json()
+}
+
+export interface RiskSignal {
+  type: string
+  original_text: string
+  explanation: string
+}
+
+export interface RiskSignalAnalysis {
+  signals: RiskSignal[]
+  analysis_summary: string
+}
+
+export interface RiskSignalAnalysisResponse {
+  analysis: RiskSignalAnalysis
+}
+
+export async function analyzeRiskSignal(file: File, signal?: AbortSignal): Promise<RiskSignalAnalysisResponse> {
+  const formData = new FormData()
+  formData.append('file', file)
+  
+  const res = await fetch(`${API_BASE}/api/risk-signal-analysis`, {
+    method: 'POST',
+    body: formData,
+    signal,
+  })
+  if (!res.ok) throw new Error(`risk-signal-analysis 요청 실패 (${res.status})`)
+  return res.json()
+}
+
+export interface LearningPoint {
+  issue: string
+  case_id: string
+  summary: string
+  case_count: number
+  avg_ratio: number | null
+}
+
+export interface LearningTerm {
+  term: string
+  description: string
+  case_count: number
+  example_cases: string[]
+}
+
+export interface LearningContentResponse {
+  points: LearningPoint[]
+  terms: LearningTerm[]
+}
+
+export async function fetchLearningContent(): Promise<LearningContentResponse> {
+  const res = await fetch(`${API_BASE}/api/learning-content`)
+  if (!res.ok) throw new Error(`learning-content 요청 실패 (${res.status})`)
+  return res.json()
+}
+
+export interface ChatRequest {
+  message: string
+  current_evidence?: Record<string, unknown> | null
+}
+
+export interface ChatResponse {
+  type: string
+  answer: string
+  source: string | null
+  action: string | null
+  action_data: string | null
+}
+
+export async function chatWithAssistant(request: ChatRequest): Promise<ChatResponse> {
+  const res = await fetch(`${API_BASE}/api/chat`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(request),
+  })
+  if (!res.ok) throw new Error(`chat 요청 실패 (${res.status})`)
   return res.json()
 }
 

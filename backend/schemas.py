@@ -59,6 +59,111 @@ class LawArticleRef(BaseModel):
     ref: str
 
 
+class LawArticleDetail(BaseModel):
+    """법조문 상세 정보"""
+    ref: str
+    article: str
+    content: str
+
+
+class ConsumerRight(BaseModel):
+    """소비자 권리 정보"""
+    id: str
+    title: str
+    description: str
+    when_to_use: str
+    how_to_exercise: str
+    law_article_ref: str
+    law_article_detail: Optional[LawArticleDetail] = None
+
+
+class ConsumerRightsResponse(BaseModel):
+    """소비자 권리 목록 응답"""
+    rights: list[ConsumerRight]
+
+
+class ProductStat(BaseModel):
+    """상품별 통계"""
+    product: str
+    case_count: int
+    ratio_stats: RatioStats
+
+
+class ProductStatsResponse(BaseModel):
+    """상품별 통계 응답"""
+    products: list[ProductStat]
+
+
+class ProductDetail(BaseModel):
+    """상품 상세 정보"""
+    product: str
+    case_count: int
+    issues: list[str]
+    avg_ratio: float | None
+    ratio_n: int
+
+
+class ProductDetailResponse(BaseModel):
+    """상품 상세 응답"""
+    detail: ProductDetail
+
+
+class RiskSignal(BaseModel):
+    """위험 신호"""
+    type: str
+    original_text: str
+    explanation: str
+
+
+class RiskSignalAnalysis(BaseModel):
+    """위험 신호 분석 결과"""
+    signals: list[RiskSignal]
+    analysis_summary: str
+
+
+class RiskSignalAnalysisResponse(BaseModel):
+    """위험 신호 분석 응답"""
+    analysis: RiskSignalAnalysis
+
+
+class LearningPoint(BaseModel):
+    """학습용 점 카드"""
+    issue: str
+    case_id: str
+    summary: str
+    case_count: int
+    avg_ratio: float | None
+
+
+class LearningTerm(BaseModel):
+    """학습용 용어 카드"""
+    term: str
+    description: str
+    case_count: int
+    example_cases: list[str]
+
+
+class LearningContentResponse(BaseModel):
+    """학습 콘텐츠 응답"""
+    points: list[LearningPoint]
+    terms: list[LearningTerm]
+
+
+class ChatRequest(BaseModel):
+    """채팅 요청"""
+    message: str
+    current_evidence: dict | None = None
+
+
+class ChatResponse(BaseModel):
+    """채팅 응답"""
+    type: str
+    answer: str
+    source: str | None
+    action: str | None
+    action_data: str | None
+
+
 class ArgumentSample(BaseModel):
     """basis 그룹 안의 대표 사례 하나 — 같은 사건(case_id) 안에서 은행 주장과
     위원회 판단(인용문)을 짝지어 보여주기 위한 단위. quote가 null이면 위원회가

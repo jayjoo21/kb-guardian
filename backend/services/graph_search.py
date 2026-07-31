@@ -705,3 +705,184 @@ def stats_overview(driver, database: str) -> dict:
             for r in issue_records
         ],
     }
+
+
+# 상품별 통계 조회 함수
+_QUERY_PRODUCT_STATS = """
+MATCH (c:Case)-[:INVOLVES]->(p:Product)
+OPTIONAL MATCH (c)-[ho:HAS_OUTCOME]->(:Respondent) WHERE ho.ratio IS NOT NULL
+RETURN p.name AS product, count(DISTINCT c) AS case_count,
+       min(ho.ratio) AS min, percentileDisc(ho.ratio, 0.5) AS median,
+       max(ho.ratio) AS max, count(ho.ratio) AS n
+ORDER BY case_count DESC
+"""
+
+
+def product_stats(driver, database: str) -> list[dict]:
+    """상품별 분쟁 통계를 조회"""
+    records, _, _ = driver.execute_query(
+        _QUERY_PRODUCT_STATS, database_=database, routing_=RoutingControl.READ,
+    )
+    return [
+        {
+            "product": r["product"], "case_count": r["case_count"],
+            "ratio_stats": {"min": r["min"], "median": r["median"], "max": r["max"], "n": r["n"]},
+        }
+        for r in records
+    ]
+
+
+# 상품별 쟁점 및 증거 패턴 조회
+_QUERY_PRODUCT_DETAILS = """
+MATCH (c:Case)-[:INVOLVES]->(p:Product {name: $product})
+OPTIONAL MATCH (c)-[:HAS_ISSUE]->(i:Issue)
+WITH c, p, collect(DISTINCT i.name) AS issues
+OPTIONAL MATCH (c)-[ho:HAS_OUTCOME]->(:Respondent) WHERE ho.ratio IS NOT NULL
+WITH p, issues, count(DISTINCT c) AS case_count, 
+     avg(ho.ratio) AS avg_ratio, count(ho.ratio) AS ratio_n
+RETURN p.name AS product, case_count, issues, avg_ratio, ratio_n
+"""
+
+
+def product_details(driver, database: str, product: str) -> dict | None:
+    """특정 상품의 상세 정보를 조회"""
+    records, _, _ = driver.execute_query(
+        _QUERY_PRODUCT_DETAILS, {"product": product}, database_=database, routing_=RoutingControl.READ,
+    )
+    if not records:
+        return None
+    record = records[0]
+    return {
+        "product": record["product"],
+        "case_count": record["case_count"],
+        "issues": record["issues"],
+        "avg_ratio": record["avg_ratio"],
+        "ratio_n": record["ratio_n"],
+    }
+
+
+# 법조문 상세 조회 함수
+_QUERY_LAW_ARTICLE_DETAIL = """
+MATCH (l:LawArticle {ref: $ref})
+RETURN l.ref AS ref, l.content AS content, l.article AS article
+"""
+
+
+def law_article_detail(driver, database: str, ref: str) -> dict | None:
+    """특정 법조문의 상세 내용을 조회"""
+    records, _, _ = driver.execute_query(
+        _QUERY_LAW_ARTICLE_DETAIL, {"ref": ref}, database_=database, routing_=RoutingControl.READ,
+    )
+    if not records:
+        return None
+    record = records[0]
+    return {
+        "ref": record["ref"],
+        "content": record["content"],
+        "article": record["article"],
+    }
+
+
+# 학습용 콘텐츠 조회 함수
+_QUERY_LEARNING_POINTS = """
+MATCH (c:Case)-[:HAS_ISSUE]->(i:Issue)
+OPTIONAL MATCH (c)-[ho:HAS_OUTCOME]->(:Respondent) WHERE ho.ratio IS NOT NULL
+RETURN i.name AS issue, c.case_id AS case_id, c.summary AS summary, 
+       count(DISTINCT c) AS case_count, avg(ho.ratio) AS avg_ratio
+ORDER BY case_count DESC
+LIMIT 20
+"""
+
+
+def learning_points(driver, database: str) -> list[dict]:
+    """학습용 점 카드 데이터를 조회 (실제 사례 기반)"""
+    records, _, _ = driver.execute_query(
+        _QUERY_LEARNING_POINTS, database_=database, routing_=RoutingControl.READ,
+    )
+    return [
+        {
+            "issue": r["issue"],
+            "case_id": r["case_id"],
+            "summary": r["summary"],
+            "case_count": r["case_count"],
+            "avg_ratio": r["avg_ratio"],
+        }
+        for r in records
+    ]
+
+
+# 용어 카드 조회 함수
+_QUERY_LEARNING_TERMS = """
+MATCH (c:Case)-[:MENTIONS]->(k:KbTerm)
+RETURN k.name AS term, k.description AS description, 
+       count(DISTINCT c) AS case_count, collect(DISTINCT c.case_id)[0..3] AS example_cases
+ORDER BY case_count DESC
+LIMIT 15
+"""
+
+
+def learning_terms(driver, database: str) -> list[dict]:
+    """학습용 용어 카드 데이터를 조회 (실제 결정문 등장 용어)"""
+    records, _, _ = driver.execute_query(
+        _QUERY_LEARNING_TERMS, database_=database, routing_=RoutingControl.READ,
+    )
+    return [
+        {
+            "term": r["term"],
+            "description": r["description"],
+            "case_count": r["case_count"],
+            "example_cases": r["example_cases"],
+        }
+        for r in records
+    ]
+
+
+# 용어 사전 상세 조회 (특정 용어의 상세 정보)
+_QUERY_TERM_DETAIL = """
+MATCH (k:KbTerm {name: $term})
+OPTIONAL MATCH (k)<-[:MENTIONS]-(c:Case)-[:HAS_ISSUE]->(i:Issue)
+RETURN k.name AS term, k.description AS description,
+       collect(DISTINCT c.case_id)[0..5] AS example_cases,
+       collect(DISTINCT i.name)[0..3] AS related_issues,
+       count(DISTINCT c) AS case_count
+"""
+
+
+def term_detail(driver, database: str, term: str) -> dict | None:
+    """특정 용어의 상세 정보를 조회"""
+    records, _, _ = driver.execute_query(
+        _QUERY_TERM_DETAIL, {"term": term}, database_=database, routing_=RoutingControl.READ,
+    )
+    if not records:
+        return None
+    record = records[0]
+    return {
+        "term": record["term"],
+        "description": record["description"],
+        "example_cases": record["example_cases"],
+        "related_issues": record["related_issues"],
+        "case_count": record["case_count"],
+    }
+
+
+# 모든 법조문 목록 조회 (금소법 관련)
+_QUERY_ALL_LAW_ARTICLES = """
+MATCH (l:LawArticle)
+RETURN l.ref AS ref, l.article AS article, l.content AS content
+ORDER BY l.ref
+"""
+
+
+def all_law_articles(driver, database: str) -> list[dict]:
+    """모든 법조문 목록을 조회"""
+    records, _, _ = driver.execute_query(
+        _QUERY_ALL_LAW_ARTICLES, database_=database, routing_=RoutingControl.READ,
+    )
+    return [
+        {
+            "ref": r["ref"],
+            "article": r["article"],
+            "content": r["content"],
+        }
+        for r in records
+    ]

@@ -1,0 +1,232 @@
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-section);
+  padding: var(--space-section) var(--space-card) calc(var(--space-section) + 70px);
+  overflow-y: auto;
+}
+
+.introSection {
+  padding: 0;
+}
+
+.introBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--kb-yellow-soft);
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.introBadgeIcon {
+  color: var(--kb-yellow);
+}
+
+.introBadgeText {
+  color: var(--ink);
+}
+
+.introTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 6px 0;
+}
+
+.introDesc {
+  font-size: 13px;
+  color: var(--slate);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.section {
+  padding: 0;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 var(--space-tight) 0;
+}
+
+.loading {
+  font-size: 13px;
+  color: var(--slate);
+  margin: 0;
+  text-align: center;
+  padding: var(--space-section);
+}
+
+.cardGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+}
+
+.pointCard {
+  padding: var(--space-element);
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pointHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pointIssue {
+  display: inline-block;
+  padding: 4px 8px;
+  background: var(--kb-yellow-soft);
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.pointCount {
+  font-size: 11px;
+  color: var(--slate);
+}
+
+.pointSummary {
+  font-size: 13px;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.pointMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-element);
+}
+
+.pointCaseId {
+  font-size: 10px;
+  color: var(--slate);
+}
+
+.pointRatio {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.consultButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--kb-yellow);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  transition: filter var(--dur-fast) var(--ease-out);
+}
+
+.consultButton:hover {
+  filter: brightness(0.92);
+}
+
+.consultButtonText {
+  flex: 1;
+}
+
+.consultButtonIcon {
+  flex: none;
+}
+
+.termGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-tight);
+}
+
+.termCard {
+  padding: var(--space-element);
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.termHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.termIcon {
+  color: var(--kb-yellow);
+  flex: none;
+}
+
+.termName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.termDescription {
+  font-size: 11px;
+  color: var(--slate);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.termMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.termCount {
+  font-size: 10px;
+  color: var(--slate);
+}
+
+.termCases {
+  font-size: 10px;
+  color: var(--slate);
+}
+
+.legalNotice {
+  padding: var(--space-section) var(--space-card) 0;
+  margin-top: auto;
+}
+
+.legalText {
+  font-size: 11px;
+  color: var(--slate);
+  text-align: center;
+  margin: 0;
+  line-height: 1.4;
+}

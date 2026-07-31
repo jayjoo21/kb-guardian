@@ -1,6 +1,8 @@
 .bar {
-  position: sticky;
+  position: absolute;
   bottom: 0;
+  left: 0;
+  right: 0;
   z-index: 10;
   flex: none;
   display: flex;
