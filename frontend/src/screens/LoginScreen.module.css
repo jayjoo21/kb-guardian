@@ -28,6 +28,23 @@
   margin: var(--space-tight) 0 0;
 }
 
+.subtitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--slate);
+  margin: 0;
+  text-align: center;
+}
+
+.description {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--slate);
+  text-align: center;
+  margin: 0;
+  padding: 0 var(--space-element);
+}
+
 .fields {
   display: flex;
   flex-direction: column;

@@ -4,18 +4,36 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
   background: var(--paper);
+  text-align: center;
+}
+
+.spinner {
+  color: #FFCC00;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .name {
   margin-top: var(--space-element);
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--ink);
 }
 
 .tagline {
-  font-size: 13px;
+  font-size: 14px;
+  line-height: 1.6;
   color: var(--slate);
+  max-width: 280px;
+  word-break: keep-all;
 }

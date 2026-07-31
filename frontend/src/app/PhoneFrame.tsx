@@ -16,7 +16,11 @@ export function PhoneFrame({ children }: PhoneFrameProps) {
     <div className={styles.page}>
       <div className={styles.aside} aria-hidden="true">
         <span className={styles.asideName}>KB 미리봄</span>
-        <p className={styles.asideTag}>내 상황, 결과를 미리 보는 금융분쟁 상담</p>
+        <p className={styles.asideTag}>
+          불공정한 상황에서<br/>
+          소비자 권익을 지키는<br/>
+          금융 분쟁 대응 AI 에이전트
+        </p>
       </div>
       <div className={styles.frame}>
         <div className={styles.notch} aria-hidden="true" />

@@ -133,25 +133,24 @@ export function ConsultInputScreen({ onStartConsult, onBack }: ConsultInputScree
         <section className={styles.freeform} aria-label="직접 입력">
           <AiBubble>어떤 상황인지 알려주세요. 자세히 적어주실수록 더 정확하게 분석해 드려요.</AiBubble>
           <form className={styles.form} onSubmit={handleSubmit}>
-            <div className={styles.inputRow}>
+            <div className={styles.inputContainer}>
               <textarea
                 className={styles.input}
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="예: 3년 적금을 중도해지했는데 우대금리를 못 받았습니다"
-                rows={3}
+                rows={4}
               />
+            </div>
+            <div className={styles.toolbar}>
               <MicButton onResult={(t) => setText((prev) => (prev ? `${prev} ${t}` : t))} />
+              <DocumentScanner />
             </div>
             <button type="submit" className={styles.submit} disabled={!text.trim()}>
               상담 시작하기
             </button>
           </form>
-
-          <div className={styles.documentSection}>
-            <DocumentScanner />
-          </div>
         </section>
       </div>
 

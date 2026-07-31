@@ -45,6 +45,11 @@ export function LoginScreen({ onLogin, onNavigateSignup, onSkip }: LoginScreenPr
         <div className={styles.brand}>
           <LogoMark size={72} />
           <h1 className={styles.name}>KB 미리봄</h1>
+          <p className={styles.subtitle}>내 상황, 결과를 미리 보는 금융분쟁 상담</p>
+        </div>
+
+        <div className={styles.description}>
+          실제 분쟁조정 사례를 바탕으로 고객님의 상황을 객관적으로 분석해 드립니다.
         </div>
 
         <div className={styles.fields}>

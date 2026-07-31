@@ -55,10 +55,11 @@
   }
 
   .asideTag {
-    font-size: 14px;
+    font-size: 15px;
     color: var(--slate);
-    line-height: 1.6;
+    line-height: 1.7;
     margin: 0;
+    word-break: keep-all;
   }
 
   .frame {

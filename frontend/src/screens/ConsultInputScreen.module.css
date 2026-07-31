@@ -4,6 +4,8 @@
   flex-direction: column;
   background: var(--paper);
   overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
 
 .content {
@@ -100,53 +102,58 @@
 .form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-tight);
+  gap: var(--space-element);
 }
 
-.inputRow {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-tight);
+.inputContainer {
+  width: 100%;
 }
 
 .input {
-  flex: 1;
+  width: 100%;
   min-width: 0;
-  min-height: 76px;
-  padding: var(--space-tight) var(--space-element);
-  border: 1.5px solid var(--hairline-strong);
-  border-radius: var(--radius);
-  background: var(--card);
+  min-height: 100px;
+  padding: 16px;
+  border: 1px solid #E5E5E5;
+  border-radius: 12px;
+  background: #FFFFFF;
   font-family: inherit;
-  font-size: 14.5px;
+  font-size: 15px;
   line-height: 1.5;
   color: var(--ink);
   resize: none;
   transition:
     border-color var(--dur-fast) var(--ease-out),
-    background var(--dur-fast) var(--ease-out);
+    box-shadow var(--dur-fast) var(--ease-out);
 }
 
 .input::placeholder {
-  color: var(--slate);
+  color: #999999;
 }
 
 .input:focus {
-  border-color: var(--ink);
-  background: var(--paper);
+  border-color: #FFCC00;
+  background: #FFFFFF;
   outline: none;
-  box-shadow: 0 0 0 3px var(--hairline);
+  box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.3);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
 }
 
 .submit {
   width: 100%;
-  min-height: 48px;
-  border: 1.5px solid var(--ink);
-  border-radius: var(--radius);
-  background: var(--kb-yellow);
-  font-size: 14.5px;
+  min-height: 52px;
+  border: none;
+  border-radius: 12px;
+  background: #FFCC00;
+  font-size: 16px;
   font-weight: 700;
-  color: var(--ink);
+  color: #1A1A1A;
   transition: filter var(--dur-fast) var(--ease-out);
 }
 
@@ -159,27 +166,15 @@
   cursor: default;
 }
 
-.documentButton {
-  width: 100%;
-  min-height: 48px;
-  border: 1.5px solid var(--hairline-strong);
-  border-radius: var(--radius);
-  background: var(--card);
-  font-size: 14.5px;
-  font-weight: 600;
-  color: var(--ink);
-  transition: 
-    border-color var(--dur-fast) var(--ease-out),
-    background var(--dur-fast) var(--ease-out);
+.legalNotice {
+  padding: var(--space-section) var(--space-card) 0;
+  margin-top: auto;
 }
 
-.documentButton:hover {
-  border-color: var(--ink);
-  background: var(--surface);
-}
-
-.documentSection {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-tight);
+.legalText {
+  font-size: 11px;
+  color: var(--slate);
+  text-align: center;
+  margin: 0;
+  line-height: 1.4;
 }

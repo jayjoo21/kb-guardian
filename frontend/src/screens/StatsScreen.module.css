@@ -6,6 +6,8 @@
   padding: var(--space-card) var(--space-card) calc(var(--space-card) + 80px);
   background: var(--paper);
   overflow-y: auto;
+  position: relative;
+  z-index: 1;
 }
 
 .title {

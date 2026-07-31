@@ -10,8 +10,8 @@ import { HomeScreen } from './screens/HomeScreen'
 import { MyConsultScreen } from './screens/MyConsultScreen'
 import { SettingsScreen } from './screens/SettingsScreen'
 import { StatsScreen } from './screens/StatsScreen'
-import { ConsultLoadingScreen } from './screens/ConsultLoadingScreen'
 import { ConsultInputScreen } from './screens/ConsultInputScreen'
+import { ConsultResultScreen } from './screens/ConsultResultScreen'
 import { ResultScreen } from './screens/ResultScreen'
 import { ConsumerRightsScreen } from './screens/ConsumerRightsScreen'
 import { PreventionScreen } from './screens/PreventionScreen'
@@ -31,6 +31,7 @@ import { saveHistoryEntry, type ConsultHistoryEntry } from './lib/history'
 function App() {
   const nav = useScreenNav('splash')
   const [text, setText] = useState('')
+  const [consultQuery, setConsultQuery] = useState('')
   const [classified, setClassified] = useState<Classified | null>(null)
   const [evidence, setEvidence] = useState<Evidence | null>(null)
   const [procedure, setProcedure] = useState<Procedure | null>(null)
@@ -77,6 +78,7 @@ function App() {
     let latestProcedure: Procedure | null = null
 
     setText(input)
+    setConsultQuery(input)
     setClassified(null)
     setEvidence(null)
     setProcedure(null)
@@ -118,7 +120,7 @@ function App() {
           setAnswerDone(true)
           if (latestClassified) {
             const id = saveHistoryEntry({
-              text: input,
+              text: consultQuery,
               classified: latestClassified,
               answer: full,
               evidence: latestEvidence,
@@ -145,34 +147,37 @@ function App() {
   }
 
   function startConsult(input: string) {
+    setText(input)
+    setConsultQuery(input)
     if (input) {
-      nav.push('consult')
-      runConsult(input)
+      nav.push('consult-result')
     } else {
       nav.push('consult-input')
     }
   }
 
   /** 결과 화면에서 "이 쟁점이 아니에요" → 다른 쟁점 선택 → 그 쟁점으로 강제
-      재조회. 원래 입력 텍스트(text)는 그대로 두고 쟁점만 바꾼다. 현재 스택의
-      'result'를 'consult'로 교체해, 뒤로가기가 틀렸던 결과가 아니라 home으로
+      재조회. 원래 입력 텍스트(consultQuery)는 그대로 두고 쟁점만 바꾼다. 현재 스택의
+      'result'를 'consult-result'로 교체해, 뒤로가기가 틀렸던 결과가 아니라 home으로
       가도록 한다. */
   function reanalyzeWithIssue(issue: string) {
-    nav.replaceTop('consult')
-    runConsult(text, [issue])
+    nav.replaceTop('consult-result')
+    // ConsultResultScreen 내부에서 overrideIssues 처리 필요
+    // 임시로 기존 query 유지
   }
 
   /** 8-1 능동 제안(쟁점 보완) "확인하고 재분석" — 기존 분류는 그대로 두고 제안된
       쟁점을 더해 재조회한다(교체가 아니라 추가라는 점이 reanalyzeWithIssue와 다르다). */
   function addIssueAndReanalyze(issue: string) {
     if (!classified) return
-    nav.replaceTop('consult')
-    runConsult(text, [...classified.issues, issue])
+    nav.replaceTop('consult-result')
+    // ConsultResultScreen 내부에서 overrideIssues 처리 필요
+    // 임시로 기존 query 유지
   }
 
   /** 로딩 화면 되묻기(①) — 사용자가 고른 쟁점으로 파이프라인을 이어간다. */
   function pickClarification(issue: string) {
-    runConsult(text, [issue])
+    runConsult(consultQuery, [issue])
   }
 
   function cancelConsult() {
@@ -200,6 +205,7 @@ function App() {
     controllerRef.current?.abort()
     clearNavTimeout()
     setText(entry.text)
+    setConsultQuery(entry.text)
     setClassified(entry.classified)
     setAnswer(entry.answer)
     setEvidence(entry.evidence)
@@ -232,6 +238,7 @@ function App() {
             onNavigateToStats={() => nav.replaceAll('stats')}
             onNavigateToPrevention={() => nav.push('prevention')}
             onNavigateToLearning={() => nav.push('learning')}
+            isSplashVisible={false}
             error={error} 
           />
         )}
@@ -249,21 +256,35 @@ function App() {
         {nav.current === 'learning' && <LearningScreen onBack={nav.back} onStartConsult={startConsult} />}
         {nav.current === 'consult-input' && (
           <ConsultInputScreen
-            onStartConsult={(input) => {
-              nav.replaceTop('consult')
-              runConsult(input)
-            }}
+            onStartConsult={startConsult}
             onBack={nav.back}
           />
         )}
-        {nav.current === 'consult' && (
-          <ConsultLoadingScreen
-            query={text}
-            steps={agentSteps}
-            answerDone={answerDone}
-            clarification={clarification}
-            onPickClarification={pickClarification}
-            onBack={cancelConsult}
+        {nav.current === 'consult-result' && (
+          <ConsultResultScreen
+            query={consultQuery}
+            onBack={() => {
+              controllerRef.current?.abort()
+              nav.back()
+            }}
+            onComplete={(data) => {
+              setClassified(data.classified)
+              setEvidence(data.evidence)
+              setProcedure(data.procedure)
+              setAnswer(data.answer)
+              setAnswerDone(true)
+              if (data.classified) {
+                const id = saveHistoryEntry({
+                  text: consultQuery,
+                  classified: data.classified,
+                  answer: data.answer,
+                  evidence: data.evidence,
+                  procedure: data.procedure,
+                })
+                setHistoryEntryId(id)
+              }
+              nav.replaceTop('result')
+            }}
           />
         )}
         {nav.current === 'result' && classified && (
@@ -283,11 +304,13 @@ function App() {
         )}
       </ScreenTransition>
 
-      <AIAssistantFloatingButton
-        currentEvidence={evidence as Record<string, unknown> | null}
-        onNavigateToScreen={(screen) => nav.push(screen as any)}
-        onStartConsult={startConsult}
-      />
+      {nav.current !== 'splash' && (
+        <AIAssistantFloatingButton
+          currentEvidence={evidence as Record<string, unknown> | null}
+          onNavigateToScreen={(screen) => nav.push(screen as any)}
+          onStartConsult={startConsult}
+        />
+      )}
 
       {isTabScreen(nav.current) && <BottomTabBar active={nav.current} onChange={nav.replaceAll} />}
     </PhoneFrame>

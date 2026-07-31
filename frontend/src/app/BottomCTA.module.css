@@ -15,10 +15,10 @@
   min-height: 52px;
   border: none;
   border-radius: var(--radius);
-  background: var(--kb-yellow);
+  background: #FFCC00;
   font-size: 16px;
   font-weight: 700;
-  color: var(--ink);
+  color: #1A1A1A;
   transition:
     filter var(--dur-fast) var(--ease-out),
     opacity var(--dur-fast) var(--ease-out);
