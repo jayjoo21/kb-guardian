@@ -68,10 +68,51 @@ interface HomeScreenProps {
   error?: string | null
 }
 
-export function HomeScreen({ onStartConsult, onNavigateToRights: _onNavigateToRights, onNavigateToStats, onNavigateToPrevention: _onNavigateToPrevention, onNavigateToLearning, error = null }: HomeScreenProps) {
+export function HomeScreen({ onStartConsult, onNavigateToRights, onNavigateToStats, onNavigateToPrevention, onNavigateToLearning, error = null }: HomeScreenProps) {
   const [issueCounts, setIssueCounts] = useState<Record<string, number>>({})
   const [activeTab, setActiveTab] = useState<'prevention' | 'safety'>('prevention')
   const [isNotiOpen, setIsNotiOpen] = useState(false)
+
+  function handleFeatureAction(itemId: string) {
+    switch (itemId) {
+      case 'ai-diagnosis':
+        onStartConsult('')
+        break
+      case 'similar-cases':
+        onNavigateToStats?.()
+        break
+      case 'bank-prediction':
+        onStartConsult('은행 반박 예측이 필요합니다. 현재 상황을 자세히 알려주세요.')
+        break
+      case 'evidence-evaluation':
+        onStartConsult('제 증거 자료를 바탕으로 평가해 주세요.')
+        break
+      case 'document-check':
+        onNavigateToPrevention?.()
+        break
+      case 'auto-application':
+        onStartConsult('분쟁조정 신청서 초안이 필요합니다. 현재 상황을 설명해 주세요.')
+        break
+      case 'dictionary':
+        onNavigateToLearning?.()
+        break
+      case 'procedure':
+        onNavigateToPrevention?.()
+        break
+      case 'report':
+        onNavigateToRights?.()
+        break
+      case 'simulation':
+        onNavigateToRights?.()
+        break
+      case 'rights-alert':
+        onNavigateToRights?.()
+        break
+      default:
+        onStartConsult('')
+        break
+    }
+  }
 
   const PREVENTION_MENU: QuickMenuItem[] = [
     {
@@ -251,7 +292,7 @@ export function HomeScreen({ onStartConsult, onNavigateToRights: _onNavigateToRi
                 key={item.id}
                 type="button"
                 className={styles.gridCard}
-                onClick={item.handler}
+                onClick={() => handleFeatureAction(item.id)}
               >
                 <span className={styles.gridIcon} aria-hidden="true">
                   <Icon size={24} />

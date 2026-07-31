@@ -13,7 +13,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-section);
-  padding: var(--space-section) var(--space-card) calc(var(--space-section) + 80px);
+  min-height: 0;
+  padding: var(--space-section) var(--space-card) calc(var(--space-section) + 96px);
   overflow-y: auto;
 }
 
@@ -141,8 +142,10 @@
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 12px;
   width: 100%;
+  flex-wrap: wrap;
 }
 
 .submit {
@@ -167,8 +170,10 @@
 }
 
 .legalNotice {
-  padding: var(--space-section) var(--space-card) 0;
+  padding: var(--space-element) var(--space-card) var(--space-card);
   margin-top: auto;
+  background: var(--paper);
+  border-top: 1px solid var(--hairline);
 }
 
 .legalText {
