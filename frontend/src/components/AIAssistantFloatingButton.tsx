@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type KeyboardEvent } from 'react'
 import { MessageCircle, X, Send } from 'lucide-react'
 import { chatWithAssistant } from '../lib/api'
 import styles from './AIAssistantFloatingButton.module.css'
@@ -18,6 +18,49 @@ export function AIAssistantFloatingButton({
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string; source?: string }>>([])
   const [loading, setLoading] = useState(false)
+
+  function createMockAssistantReply(input: string) {
+    const trimmed = input.trim()
+    const lower = trimmed.toLowerCase()
+
+    if (lower.includes('서류') || lower.includes('문서') || lower.includes('체크')) {
+      return {
+        answer:
+          '금감원 분쟁조정에선 계약서, 통화 녹취, 송금 내역, 상담 기록과 같은 증거를 먼저 정리하는 것이 중요합니다. 지금은 서류 체크 흐름으로 안내해 드릴게요.',
+        source: '모의 응답',
+        action: 'navigate_to_screen' as const,
+        action_data: 'prevention',
+      }
+    }
+
+    if (lower.includes('법') || lower.includes('금소법') || lower.includes('설명의무') || lower.includes('적합성')) {
+      return {
+        answer:
+          '금소법(금융소비자보호법)에 따라 금융회사는 설명의무를 다하고, 적합성원칙에 따라 투자성향에 맞지 않는 상품 권유는 문제가 될 수 있습니다. 권리 안내 화면에서 관련 조항을 더 확인해 보세요.',
+        source: '모의 응답',
+        action: 'navigate_to_screen' as const,
+        action_data: 'consumer-rights',
+      }
+    }
+
+    if (lower.includes('반박') || lower.includes('예측') || lower.includes('은행')) {
+      return {
+        answer:
+          '은행이 자주 내세우는 반박은 “고객이 직접 서명했다”, “설명을 충분히 받았다”는 식입니다. 현재 상황을 바탕으로 반박 포인트를 정리해 드릴게요.',
+        source: '모의 응답',
+        action: 'start_consult' as const,
+        action_data: '은행 반박 예측이 필요합니다. 현재 상황을 자세히 알려주세요.',
+      }
+    }
+
+    return {
+      answer:
+        '현재 백엔드 연결이 불안정해도 데모용으로 바로 이어서 답변할 수 있습니다. 상담 시작, 서류 체크, 권리 안내 중 원하는 흐름을 한 번 더 말해 주세요.',
+      source: '모의 응답',
+      action: null,
+      action_data: null,
+    }
+  }
 
   async function handleSend() {
     if (!message.trim() || loading) return
@@ -50,16 +93,27 @@ export function AIAssistantFloatingButton({
       }
     } catch (err) {
       console.error('채팅 실패:', err)
+      const fallback = createMockAssistantReply(userMessage)
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: '죄송합니다. 현재 답변 처리 중 오류가 발생했습니다.' },
+        {
+          role: 'assistant',
+          content: fallback.answer,
+          source: fallback.source,
+        },
       ])
+
+      if (fallback.action === 'navigate_to_screen' && fallback.action_data && onNavigateToScreen) {
+        onNavigateToScreen(fallback.action_data)
+      } else if (fallback.action === 'start_consult' && fallback.action_data && onStartConsult) {
+        onStartConsult(fallback.action_data)
+      }
     } finally {
       setLoading(false)
     }
   }
 
-  function handleKeyPress(e: React.KeyboardEvent) {
+  function handleKeyPress(e: KeyboardEvent) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSend()
