@@ -9,6 +9,7 @@ const MAX_ENTRIES = 20
 export interface ConsultHistoryEntry {
   id: string
   createdAt: string
+  timestamp?: string
   text: string
   issues: string[]
   medianRatio: number | null

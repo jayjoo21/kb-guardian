@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { MessageCircle, X, Send } from 'lucide-react'
-import { chatWithAssistant, type ChatResponse } from '../lib/api'
+import { chatWithAssistant } from '../lib/api'
 import styles from './AIAssistantFloatingButton.module.css'
 
 interface AIAssistantFloatingButtonProps {

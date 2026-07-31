@@ -272,6 +272,7 @@ export interface Classified {
   issues: string[]
   products: string[]
   factors: string[]
+  confidence?: number
 }
 
 export interface Procedure {
@@ -286,11 +287,14 @@ export interface SimilarCase {
   result: string | null
   ratio: number | null
   date: string | null
+  summary?: string
 }
 
 export interface LawArticleRef {
   issue: string
   ref: string
+  article?: string
+  content?: string
 }
 
 export interface CriteriaRef {

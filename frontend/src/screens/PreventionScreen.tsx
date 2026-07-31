@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { TopAppBar } from '../app/TopAppBar'
-import { AlertTriangle, CheckCircle, FileText, Upload, ChevronRight, AlertCircle, TrendingUp, Wallet, CreditCard, Landmark, Building2 } from 'lucide-react'
+import { AlertTriangle, CheckCircle, FileText, Upload, AlertCircle, TrendingUp, Wallet, CreditCard, Landmark, Building2 } from 'lucide-react'
 import { fetchProductStats, fetchProductDetail, analyzeRiskSignal, type ProductStat, type ProductDetail, type RiskSignalAnalysis } from '../lib/api'
-import { DocumentScanner } from '../components/DocumentScanner'
 import styles from './PreventionScreen.module.css'
 
 interface PreventionScreenProps {
@@ -165,7 +164,7 @@ export function PreventionScreen({ onBack }: PreventionScreenProps) {
                     onClick={() => setSelectedProduct(product.product)}
                   >
                     <div className={styles.productHeader}>
-                      <Icon size={20} style={{ color: 'var(--kb-yellow)' }} />
+                      <Icon size={20} color="var(--kb-yellow)" />
                       <span className={styles.productName}>{product.product}</span>
                       <span className={styles.productCount}>{product.case_count}건</span>
                     </div>

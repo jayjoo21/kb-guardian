@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ChevronDown, ChevronUp, Scale, FileText, Clock, CheckCircle, AlertCircle, X } from 'lucide-react'
+import { ChevronDown, ChevronUp, Scale, FileText, Clock, CheckCircle, AlertCircle } from 'lucide-react'
 import { TopAppBar } from '../app/TopAppBar'
 import { fetchConsumerRights, type ConsumerRight } from '../lib/api'
 import styles from './ConsumerRightsScreen.module.css'

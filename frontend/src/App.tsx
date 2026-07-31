@@ -284,8 +284,8 @@ function App() {
       </ScreenTransition>
 
       <AIAssistantFloatingButton
-        currentEvidence={evidence}
-        onNavigateToScreen={(screen) => nav.push(screen)}
+        currentEvidence={evidence as Record<string, unknown> | null}
+        onNavigateToScreen={(screen) => nav.push(screen as any)}
         onStartConsult={startConsult}
       />
 

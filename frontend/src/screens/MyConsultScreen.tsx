@@ -42,37 +42,57 @@ export function MyConsultScreen({ onOpenEntry, onStartConsult, onOpenSettings }:
   const mockEntries: ConsultHistoryEntry[] = [
     {
       id: "mock-1",
-      text: "ELS 상품 관련 설명 의무 위반 상담",
+      createdAt: new Date("2024-03-15T10:30:00").toISOString(),
       timestamp: new Date("2024-03-15T10:30:00").toISOString(),
+      text: "ELS 상품 관련 설명 의무 위반 상담",
       issues: ["설명의무 위반"],
-      classified: { issues: ["설명의무 위반"], confidence: 0.85 },
+      medianRatio: 60,
+      classified: { issues: ["설명의무 위반"], products: [], factors: [], confidence: 0.85 },
       answer: "해당 상황은 설명의무 위반으로 판단됩니다.",
       evidence: {
         similar_cases: [
-          { case_id: "제2023-1호", ratio: 60, summary: "ELS 상품 설명 의무 위반" },
-          { case_id: "제2022-3호", ratio: 55, summary: "파생상품 설명 부족" },
+          { case_id: "제2023-1호", title: "ELS 상품 설명 의무 위반", case_no: "2023-1", result: "승소", ratio: 60, date: "2023-01-15", summary: "ELS 상품 설명 의무 위반" },
+          { case_id: "제2022-3호", title: "파생상품 설명 부족", case_no: "2022-3", result: "승소", ratio: 55, date: "2022-03-20", summary: "파생상품 설명 부족" },
         ],
-        ratio_stats: { min: 0, median: 60, max: 100, n: 73 },
-        law_articles: [{ ref: "금융소비자보호법 제17조", article: "제17조", content: "설명의무" }],
+        law_articles: [{ issue: "설명의무 위반", ref: "금융소비자보호법 제17조", article: "제17조" }],
+        precedents: ["제2023-1호", "제2022-3호"],
+        ratio_stats: { min: 0, avg: 45, median: 60, max: 100, n: 73 },
+        criteria: [],
+        respondent_arguments: [],
+        evidence_patterns: [],
+        adjacent_issue: null,
+        kb_terms: [],
+        issue_suggestion: null,
       },
       procedure: null,
+      possessedEvidence: [],
       checkedDocuments: [],
     },
     {
       id: "mock-2",
-      text: "펀드 가입 시 부당 권유 관련 상담",
+      createdAt: new Date("2024-03-10T14:20:00").toISOString(),
       timestamp: new Date("2024-03-10T14:20:00").toISOString(),
+      text: "펀드 가입 시 부당 권유 관련 상담",
       issues: ["부당권유"],
-      classified: { issues: ["부당권유"], confidence: 0.78 },
+      medianRatio: 50,
+      classified: { issues: ["부당권유"], products: [], factors: [], confidence: 0.78 },
       answer: "해당 상황은 부당권유로 판단됩니다.",
       evidence: {
         similar_cases: [
-          { case_id: "제2023-3호", ratio: 50, summary: "부당권유 사례" },
+          { case_id: "제2023-3호", title: "부당권유 사례", case_no: "2023-3", result: "승소", ratio: 50, date: "2023-05-10", summary: "부당권유 사례" },
         ],
-        ratio_stats: { min: 0, median: 50, max: 100, n: 51 },
-        law_articles: [{ ref: "금융소비자보호법 제18조", article: "제18조", content: "부당권유 금지" }],
+        law_articles: [{ issue: "부당권유", ref: "금융소비자보호법 제18조", article: "제18조" }],
+        precedents: ["제2023-3호"],
+        ratio_stats: { min: 0, avg: 38, median: 50, max: 100, n: 51 },
+        criteria: [],
+        respondent_arguments: [],
+        evidence_patterns: [],
+        adjacent_issue: null,
+        kb_terms: [],
+        issue_suggestion: null,
       },
       procedure: null,
+      possessedEvidence: [],
       checkedDocuments: [],
     },
   ]
@@ -130,7 +150,7 @@ export function MyConsultScreen({ onOpenEntry, onStartConsult, onOpenSettings }:
                 <li key={entry.id}>
                   <button type="button" className={styles.card} onClick={() => onOpenEntry(entry)}>
                     <div className={styles.cardTop}>
-                      <span className={styles.cardDate}>{formatDate(entry.timestamp)}</span>
+                      <span className={styles.cardDate}>{formatDate(entry.timestamp || entry.createdAt)}</span>
                       <span className={`${styles.badge} ${badge.strong ? styles.badgeStrong : ''}`}>
                         {badge.label}
                       </span>

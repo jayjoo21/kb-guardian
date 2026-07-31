@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { TopAppBar } from '../app/TopAppBar'
-import { BookOpen, ArrowRight, Lightbulb, FileText } from 'lucide-react'
+import { ArrowRight, Lightbulb, FileText } from 'lucide-react'
 import { fetchLearningContent, type LearningPoint, type LearningTerm } from '../lib/api'
 import styles from './LearningScreen.module.css'
 
