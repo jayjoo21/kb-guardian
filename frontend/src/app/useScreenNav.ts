@@ -1,10 +1,10 @@
 import { useCallback, useState } from 'react'
 
-export type TabScreenId = 'home' | 'my-consult' | 'stats'
-export type ScreenId = 'splash' | 'login' | 'signup' | TabScreenId | 'consult-input' | 'consult' | 'result' | 'settings' | 'consumer-rights' | 'prevention' | 'learning'
+export type TabScreenId = 'home' | 'my-page' | 'stats'
+export type ScreenId = 'splash' | 'login' | 'signup' | TabScreenId | 'consult-input' | 'consult-result' | 'consult' | 'result' | 'settings' | 'consumer-rights' | 'prevention' | 'learning'
 
 export function isTabScreen(screen: ScreenId): screen is TabScreenId {
-  return screen === 'home' || screen === 'my-consult' || screen === 'stats'
+  return screen === 'home' || screen === 'my-page' || screen === 'stats'
 }
 
 /** 화면 전환을 스택으로 관리 — 탭 전환은 replaceAll(형제 화면끼리 히스토리 없음),

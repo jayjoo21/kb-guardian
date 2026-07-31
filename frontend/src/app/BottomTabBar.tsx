@@ -1,4 +1,4 @@
-import { Home, MessageSquareText, BarChart3 } from 'lucide-react'
+import { BarChart3, Home, User } from 'lucide-react'
 import type { TabScreenId } from './useScreenNav'
 import styles from './BottomTabBar.module.css'
 
@@ -10,7 +10,7 @@ interface TabDef {
 
 const TABS: TabDef[] = [
   { id: 'home', label: '홈', Icon: Home },
-  { id: 'my-consult', label: '내 상담', Icon: MessageSquareText },
+  { id: 'my-page', label: '마이페이지', Icon: User },
   { id: 'stats', label: '통계', Icon: BarChart3 },
 ]
 

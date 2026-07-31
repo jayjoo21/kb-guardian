@@ -1,0 +1,137 @@
+.wrapper {
+  display: inline-flex;
+  align-items: center;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.sheet {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  background: var(--card);
+  box-shadow: 0 20px 44px rgba(15, 23, 42, 0.18);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink);
+}
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--slate);
+}
+
+.definition {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.metricCard {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.metricLabel {
+  font-size: 10px;
+  color: var(--slate);
+}
+
+.examplesSection {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.examplesLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--slate);
+  text-transform: uppercase;
+}
+
+.examplesList {
+  margin: 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--ink);
+}
+
+.tipBox {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--kb-yellow-soft);
+}
+
+.tipHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.tipBox p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--ink);
+}

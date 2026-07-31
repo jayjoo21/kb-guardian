@@ -1,0 +1,247 @@
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-card);
+  padding: var(--space-card) var(--space-card) calc(var(--space-card) + 80px);
+  background: var(--paper);
+  overflow-y: auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-tight);
+}
+
+.eyebrow {
+  margin: 0 0 2px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--slate);
+}
+
+.title,
+.sectionTitle,
+.cardTitle {
+  margin: 0;
+  color: var(--ink);
+}
+
+.title {
+  font-size: 20px;
+}
+
+.iconButton,
+.secondaryButton,
+.segmentButton {
+  border: 1px solid var(--card-border);
+  background: var(--card);
+  color: var(--ink);
+  border-radius: var(--radius);
+}
+
+.iconButton {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.heroCard,
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-element);
+  padding: var(--space-element);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.heroHeader,
+.sectionHeader,
+.timelineTop,
+.timelineFooter,
+.favoriteMeta,
+.favoriteFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-tight);
+}
+
+.safeBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--kb-yellow-soft);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.assetGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-tight);
+}
+
+.assetItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-tight);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.assetLabel {
+  font-size: 11px;
+  color: var(--slate);
+}
+
+.assetValue {
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.heroSummary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-tight);
+}
+
+.heroSummaryItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-tight);
+  border-radius: var(--radius-sm);
+  background: var(--kb-yellow-soft);
+}
+
+.heroSummaryItem span {
+  font-size: 11px;
+  color: var(--slate);
+}
+
+.heroSummaryItem strong {
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.heroNote,
+.emptyState p,
+.timelineBody p,
+.favoriteSummary {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--slate);
+}
+
+.secondaryButton {
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.segmented {
+  display: flex;
+  gap: 6px;
+}
+
+.segmentButton {
+  padding: 7px 10px;
+  font-size: 12px;
+}
+
+.segmentButtonActive {
+  border-color: var(--ink);
+  background: var(--kb-yellow);
+}
+
+.timelineList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+}
+
+.timelineCard {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: var(--space-tight);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-align: left;
+}
+
+.timelineDate,
+.timelineBadge,
+.favoriteTag {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--slate);
+}
+
+.timelineBadge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--kb-yellow-soft);
+  color: var(--ink);
+}
+
+.timelineBody {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.timelineBody strong {
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.timelineFooter {
+  font-size: 11px;
+  color: var(--slate);
+}
+
+.favoriteList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+}
+
+.favoriteItem {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-tight);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.favoriteTitle {
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.favoriteFooter {
+  font-size: 11px;
+  color: var(--slate);
+}

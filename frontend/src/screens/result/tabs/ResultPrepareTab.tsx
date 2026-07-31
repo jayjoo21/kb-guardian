@@ -109,7 +109,12 @@ export function ResultPrepareTab({
     setCheckedDocs((prev) => (next ? [...prev, doc] : prev.filter((d) => d !== doc)))
     if (historyEntryId) setCheckedDocument(historyEntryId, doc, next)
   }
-
+ 
+  const totalDocuments = procedure?.documents.length ?? 0
+  const completedDocuments = procedure?.documents.filter((doc) => checkedDocs.includes(doc)).length ?? 0
+  const readinessPercent = totalDocuments > 0 ? Math.round((completedDocuments / totalDocuments) * 100) : 100
+  const evidenceSummary = evidencePatterns.length > 0 ? `${evidencePatterns.length}개 자료` : '추가 자료 없음'
+ 
   if (!procedure && evidencePatterns.length === 0) {
     return (
       <div className={styles.panel} role="tabpanel">
@@ -120,6 +125,22 @@ export function ResultPrepareTab({
 
   return (
     <div className={styles.panel} role="tabpanel">
+      <PrepareSection title="준비도 요약" icon={<ShieldAlert size={16} />}>
+        <div className={styles.summaryCard}>
+          <div className={styles.summaryHeader}>
+            <strong className={styles.summaryTitle}>서류·증거 준비 상태</strong>
+            <span className={styles.summaryPercent}>{readinessPercent}%</span>
+          </div>
+          <div className={styles.summaryBar} aria-label={`제출 서류 준비도 ${readinessPercent}%`}>
+            <div className={styles.summaryBarFill} style={{ width: `${Math.max(8, readinessPercent)}%` }} />
+          </div>
+          <div className={styles.summaryMetaRow}>
+            <span className={styles.summaryMeta}>서류 {completedDocuments}/{totalDocuments}</span>
+            <span className={styles.summaryMeta}>증거 패턴 {evidenceSummary}</span>
+          </div>
+        </div>
+      </PrepareSection>
+ 
       {procedure && (procedure.steps.length > 0 || procedure.documents.length > 0) && (
         <PrepareSection title="진행 단계" icon={<Route size={16} />}>
           <ol className={styles.timeline}>

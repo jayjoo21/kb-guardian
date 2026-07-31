@@ -79,7 +79,9 @@ export function ResultAnalysisTab({ items, lawArticles }: ResultAnalysisTabProps
         {visible.map(({ item, title }) => {
           const isWeak = item.rejected_rate < WEAK_THRESHOLD
           const sample = item.samples[0]
-
+          const rejectionPercent = Math.round(item.rejected_rate * 1000) / 10
+          const acceptancePercent = Math.max(0, 100 - rejectionPercent)
+ 
           return (
             <li key={item.basis} className={`${styles.card} ${isWeak ? styles.cardWeak : ''}`}>
               {isWeak && (
@@ -87,10 +89,24 @@ export function ResultAnalysisTab({ items, lawArticles }: ResultAnalysisTabProps
                   이 주장은 실제로 받아들여진 경우가 많아요 — 대비가 필요해요
                 </span>
               )}
-
+ 
               <div className={styles.side}>
                 <span className={styles.sideLabel}>은행 주장</span>
                 <p className={styles.sideText}>{title}</p>
+              </div>
+ 
+              <div className={styles.metricRow}>
+                <div className={styles.metricChip}>
+                  <span className={styles.metricLabel}>실제 배척률</span>
+                  <strong className={styles.metricValue}>{rejectionPercent.toFixed(1)}%</strong>
+                </div>
+                <div className={styles.metricChip}>
+                  <span className={styles.metricLabel}>채택 가능성</span>
+                  <strong className={styles.metricValue}>{acceptancePercent.toFixed(1)}%</strong>
+                </div>
+              </div>
+              <div className={styles.meter} aria-label={`배척률 ${rejectionPercent.toFixed(1)}%`}>
+                <div className={styles.meterBar} style={{ width: `${Math.min(100, Math.max(6, rejectionPercent))}%` }} />
               </div>
 
               {sample?.quote && (

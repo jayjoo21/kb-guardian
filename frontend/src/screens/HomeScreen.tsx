@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react'
-import { 
-  Shield, AlertTriangle, FileText, 
-  Scale, BarChart3, BookOpen, ChevronRight, Scan, Bell, X, 
-  AlertCircle, Search, Lightbulb, PieChart, Headphones, 
-  FileCheck, Map, Megaphone, MousePointer2, BellRing,
-  MessageSquareWarning, ShieldAlert, CheckSquare, PenTool, type LucideIcon 
+import {
+  Shield, AlertTriangle, Scale, BookOpen, ChevronRight, Scan, Bell, X,
+  Search, FileCheck, Map, Megaphone, MousePointer2, BellRing,
+  MessageSquareWarning, ShieldAlert, CheckSquare, PenTool, type LucideIcon,
 } from 'lucide-react'
 import { fetchStats } from '../lib/api'
 import styles from './HomeScreen.module.css'
@@ -70,7 +68,7 @@ interface HomeScreenProps {
   error?: string | null
 }
 
-export function HomeScreen({ onStartConsult, onNavigateToRights, onNavigateToStats, onNavigateToPrevention, onNavigateToLearning, error = null }: HomeScreenProps) {
+export function HomeScreen({ onStartConsult, onNavigateToRights: _onNavigateToRights, onNavigateToStats, onNavigateToPrevention: _onNavigateToPrevention, onNavigateToLearning, error = null }: HomeScreenProps) {
   const [issueCounts, setIssueCounts] = useState<Record<string, number>>({})
   const [activeTab, setActiveTab] = useState<'prevention' | 'safety'>('prevention')
   const [isNotiOpen, setIsNotiOpen] = useState(false)
@@ -117,7 +115,7 @@ export function HomeScreen({ onStartConsult, onNavigateToRights, onNavigateToSta
   const SAFETY_MENU: QuickMenuItem[] = [
     {
       id: 'dictionary',
-      label: '쉬운 용어 사전',
+      label: '금융 권익 사전',
       icon: BookOpen,
       handler: () => onNavigateToLearning?.(),
     },

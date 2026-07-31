@@ -35,14 +35,28 @@ export function EvidencePatternsAccordion({ items }: EvidencePatternsAccordionPr
         {sorted.map((p) => {
           const favorable = p.favorable_rate >= p.unfavorable_rate
           const label = p.source_terms.length > 0 ? p.source_terms.join(', ') : p.type
+          const favorablePercent = Math.round(p.favorable_rate * 1000) / 10
+          const unfavorablePercent = Math.round(p.unfavorable_rate * 1000) / 10
           return (
             <li key={p.type} className={styles.row}>
-              <Checkbox
-                checked={!!checked[p.type]}
-                onChange={(v) => setChecked((prev) => ({ ...prev, [p.type]: v }))}
-              >
-                <span className={styles.rowLabel}>{label}</span>
-              </Checkbox>
+              <div className={styles.rowMain}>
+                <Checkbox
+                  checked={!!checked[p.type]}
+                  onChange={(v) => setChecked((prev) => ({ ...prev, [p.type]: v }))}
+                >
+                  <span className={styles.rowLabel}>{label}</span>
+                </Checkbox>
+                <div className={styles.metricRow}>
+                  <span className={styles.metricValue}>유리 {favorablePercent.toFixed(1)}%</span>
+                  <span className={styles.metricValue}>불리 {unfavorablePercent.toFixed(1)}%</span>
+                </div>
+              </div>
+              <div className={styles.progressWrap} aria-label={`${label} 유리도 ${favorablePercent.toFixed(1)}%`}>
+                <div
+                  className={`${styles.progressBar} ${favorable ? styles.progressPositive : styles.progressNegative}`}
+                  style={{ width: `${Math.max(8, favorablePercent)}%` }}
+                />
+              </div>
               <DirectionIcon favorable={favorable} />
             </li>
           )

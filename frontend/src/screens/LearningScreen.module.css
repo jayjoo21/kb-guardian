@@ -53,15 +53,127 @@
   line-height: 1.5;
 }
 
+.searchCard,
+.overviewCard,
+.pointCard,
+.termCard {
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.searchCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: var(--space-element);
+}
+
+.searchLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--slate);
+}
+
+.searchInput {
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 13px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.overviewCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--space-element);
+}
+
+.overviewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.overviewEyebrow {
+  margin: 0 0 2px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--slate);
+  text-transform: uppercase;
+}
+
+.overviewTitle {
+  margin: 0;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.overviewBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--kb-yellow-soft);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.overviewStats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.overviewStat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.overviewStat strong {
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.overviewStat span {
+  font-size: 11px;
+  color: var(--slate);
+}
+
 .section {
   padding: 0;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: var(--space-tight);
 }
 
 .sectionTitle {
   font-size: 14px;
   font-weight: 600;
   color: var(--ink);
-  margin: 0 0 var(--space-tight) 0;
+  margin: 0;
+}
+
+.sectionHint {
+  font-size: 10px;
+  color: var(--slate);
 }
 
 .loading {
@@ -80,9 +192,6 @@
 
 .pointCard {
   padding: var(--space-element);
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -170,9 +279,6 @@
 
 .termCard {
   padding: var(--space-element);
-  background: var(--card);
-  border: 1px solid var(--card-border);
-  border-radius: var(--radius);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -181,12 +287,8 @@
 .termHeader {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 6px;
-}
-
-.termIcon {
-  color: var(--kb-yellow);
-  flex: none;
 }
 
 .termName {
@@ -202,10 +304,14 @@
   line-height: 1.4;
 }
 
-.termMeta {
+.termExampleList {
+  margin: 0;
+  padding-left: 14px;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  font-size: 10px;
+  color: var(--slate);
 }
 
 .termCount {
@@ -213,9 +319,10 @@
   color: var(--slate);
 }
 
-.termCases {
-  font-size: 10px;
-  color: var(--slate);
+.inlineTerm {
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-underline-offset: 3px;
 }
 
 .legalNotice {

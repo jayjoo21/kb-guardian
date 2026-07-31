@@ -36,7 +36,7 @@ export function ConsultResultScreen({ query, onBack, onComplete }: ConsultResult
   const [classified, setClassified] = useState<Classified | null>(null)
   const [evidence, setEvidence] = useState<Evidence | null>(null)
   const [procedure, setProcedure] = useState<Procedure | null>(null)
-  const [answer, setAnswer] = useState<string>('')
+  const [, setAnswer] = useState<string>('')
 
   const handlers: ConsultStreamHandlers = {
     onAgentStep: (data: AgentStep) => {
