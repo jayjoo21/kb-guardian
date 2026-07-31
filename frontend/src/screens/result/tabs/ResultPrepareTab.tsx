@@ -20,10 +20,6 @@ function calculateRemainingDays(targetDate: Date): number {
   return diffDays
 }
 
-function formatDate(date: Date): string {
-  return date.toISOString().split('T')[0]
-}
-
 // 실제 존재를 확인한 공식 URL만 쓴다(가짜 링크 없음).
 const STAGE_LINKS = [
   {

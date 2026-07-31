@@ -11,15 +11,15 @@ interface PreventionScreenProps {
 
 // 상품 유형 목데이터
 const mockProducts: ProductStat[] = [
-  { product: "ELS", case_count: 73, ratio_stats: { min: 0, median: 60, max: 100, n: 73 } },
-  { product: "신탁", case_count: 45, ratio_stats: { min: 0, median: 55, max: 100, n: 45 } },
-  { product: "펀드", case_count: 51, ratio_stats: { min: 0, median: 50, max: 100, n: 51 } },
-  { product: "예적금", case_count: 33, ratio_stats: { min: 0, median: 40, max: 100, n: 33 } },
-  { product: "카드", case_count: 28, ratio_stats: { min: 0, median: 70, max: 100, n: 28 } },
-  { product: "대출", case_count: 39, ratio_stats: { min: 0, median: 45, max: 100, n: 39 } },
+  { product: "ELS", case_count: 73, ratio_stats: { min: 0, avg: 45, median: 60, max: 100, n: 73 } },
+  { product: "신탁", case_count: 45, ratio_stats: { min: 0, avg: 40, median: 55, max: 100, n: 45 } },
+  { product: "펀드", case_count: 51, ratio_stats: { min: 0, avg: 42, median: 50, max: 100, n: 51 } },
+  { product: "예적금", case_count: 33, ratio_stats: { min: 0, avg: 35, median: 40, max: 100, n: 33 } },
+  { product: "카드", case_count: 28, ratio_stats: { min: 0, avg: 55, median: 70, max: 100, n: 28 } },
+  { product: "대출", case_count: 39, ratio_stats: { min: 0, avg: 38, median: 45, max: 100, n: 39 } },
 ]
 
-const productIcons: Record<string, React.ComponentType<{ size?: number }>> = {
+const productIcons: Record<string, React.ComponentType<{ size?: number; color?: string }>> = {
   "ELS": TrendingUp,
   "신탁": Building2,
   "펀드": Wallet,
@@ -165,7 +165,7 @@ export function PreventionScreen({ onBack }: PreventionScreenProps) {
                     onClick={() => setSelectedProduct(product.product)}
                   >
                     <div className={styles.productHeader}>
-                      <Icon size={20} className={styles.productIcon} />
+                      <Icon size={20} style={{ color: 'var(--kb-yellow)' }} />
                       <span className={styles.productName}>{product.product}</span>
                       <span className={styles.productCount}>{product.case_count}건</span>
                     </div>

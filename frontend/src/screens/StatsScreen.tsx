@@ -31,11 +31,11 @@ export function StatsScreen() {
   const mockStats: StatsResponse = {
     total_cases: 1247,
     issues: [
-      { issue: "설명의무 위반", case_count: 73, ratio_stats: { min: 0, median: 60, max: 100, n: 73 } },
-      { issue: "부당권유", case_count: 51, ratio_stats: { min: 0, median: 50, max: 100, n: 51 } },
-      { issue: "적합성원칙 위반", case_count: 33, ratio_stats: { min: 0, median: 40, max: 100, n: 33 } },
-      { issue: "불완전판매", case_count: 45, ratio_stats: { min: 0, median: 55, max: 100, n: 45 } },
-      { issue: "임의처리·무단거래", case_count: 28, ratio_stats: { min: 0, median: 70, max: 100, n: 28 } },
+      { issue: "설명의무 위반", case_count: 73, ratio_stats: { min: 0, avg: 45, median: 60, max: 100, n: 73 } },
+      { issue: "부당권유", case_count: 51, ratio_stats: { min: 0, avg: 38, median: 50, max: 100, n: 51 } },
+      { issue: "적합성원칙 위반", case_count: 33, ratio_stats: { min: 0, avg: 32, median: 40, max: 100, n: 33 } },
+      { issue: "불완전판매", case_count: 45, ratio_stats: { min: 0, avg: 42, median: 55, max: 100, n: 45 } },
+      { issue: "임의처리·무단거래", case_count: 28, ratio_stats: { min: 0, avg: 55, median: 70, max: 100, n: 28 } },
     ],
     corpus: {
       precedents: 813,

@@ -106,11 +106,6 @@
   gap: 8px;
 }
 
-.productIcon {
-  color: var(--kb-yellow);
-  flex: none;
-}
-
 .productName {
   font-size: 13px;
   font-weight: 600;
