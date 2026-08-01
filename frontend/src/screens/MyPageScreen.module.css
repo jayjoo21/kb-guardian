@@ -177,6 +177,161 @@
   gap: var(--space-tight);
 }
 
+.insightGrid {
+  display: grid;
+  gap: var(--space-tight);
+}
+
+.insightCard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--space-tight);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--surface) 0%, var(--card) 100%);
+}
+
+.insightCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-tight);
+}
+
+.insightCardHeader strong {
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.sparkline {
+  width: 100%;
+  overflow: hidden;
+}
+
+.sparkline svg {
+  width: 100%;
+  height: auto;
+}
+
+.chartBar {
+  fill: var(--kb-yellow);
+}
+
+.chartLabel {
+  font-size: 8px;
+  fill: var(--slate);
+}
+
+.chartFallback {
+  font-size: 11px;
+  fill: var(--slate);
+}
+
+.insightMetricList {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-tight);
+}
+
+.metricCard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  border: 1px solid var(--card-border);
+}
+
+.metricCard span {
+  font-size: 10px;
+  color: var(--slate);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.metricCard strong {
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.simulationList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-tight);
+}
+
+.simulationCard {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: var(--space-tight);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.simulationMainButton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+}
+
+.simulationMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-tight);
+}
+
+.simulationRights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.simulationChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--kb-yellow-soft);
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.simulationActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.smallActionButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.smallActionButtonDanger {
+  color: #b42318;
+  border-color: rgba(180, 35, 24, 0.2);
+}
+
 .timelineCard {
   width: 100%;
   display: flex;

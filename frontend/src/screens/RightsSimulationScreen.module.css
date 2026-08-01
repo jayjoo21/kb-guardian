@@ -1,0 +1,339 @@
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-card);
+  padding: var(--space-card);
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.heroCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--card) 0%, var(--surface) 100%);
+}
+
+.heroIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--kb-yellow-soft);
+  color: var(--ink);
+  flex: none;
+}
+
+.heroLabel {
+  margin: 0 0 2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--slate);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.heroTitle {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--ink);
+}
+
+.chatCard,
+.questionCard,
+.resultCard,
+.historyCard,
+.inputCard {
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  background: var(--card);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.chatCard {
+  padding: 12px;
+}
+
+.chatMessages {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bubble {
+  max-width: 90%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.assistantBubble {
+  align-self: flex-start;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.userBubble {
+  align-self: flex-end;
+  background: var(--kb-yellow-soft);
+  color: var(--ink);
+}
+
+.bubble p {
+  margin: 0;
+}
+
+.questionCard {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.questionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stepLabel {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--slate);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.questionTitle {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.questionDescription {
+  margin: 0;
+  font-size: 12px;
+  color: var(--slate);
+  line-height: 1.45;
+}
+
+.optionList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.optionButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: var(--paper);
+  color: var(--ink);
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.optionArrow {
+  color: var(--slate);
+}
+
+.resultCard {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.resultHeader {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.resultIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--kb-yellow-soft);
+  color: var(--ink);
+  flex: none;
+}
+
+.resultLabel {
+  margin: 0 0 2px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--slate);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.resultTitle {
+  margin: 0;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.resultBody {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.resultBlock {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.resultBlock h4 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: var(--slate);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.resultBlock p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.rightsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rightChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: var(--kb-yellow-soft);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.resultActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.saveButton,
+.resetButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.saveButton {
+  background: var(--kb-yellow-soft);
+  color: var(--ink);
+}
+
+.resetButton {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.historyCard {
+  padding: 12px 14px;
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  background: var(--card);
+}
+
+.historyLabel {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--slate);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.historyText {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+}
+
+.inputCard {
+  padding: 14px;
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  background: var(--card);
+}
+
+.inputHint {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--slate);
+}
+
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input {
+  flex: 1;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.sendButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--paper);
+}

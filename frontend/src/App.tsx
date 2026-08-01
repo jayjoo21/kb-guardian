@@ -16,10 +16,11 @@ import { ResultScreen } from './screens/ResultScreen'
 import { ConsumerRightsScreen } from './screens/ConsumerRightsScreen'
 import { PreventionScreen } from './screens/PreventionScreen'
 import { LearningScreen } from './screens/LearningScreen'
+import { RightsSimulationScreen } from './screens/RightsSimulationScreen'
 import { AIAssistantFloatingButton } from './components/AIAssistantFloatingButton'
 import { type Classified, type Evidence, type Procedure } from './lib/api'
 import { isLoggedIn, logout } from './lib/auth'
-import { saveHistoryEntry, type ConsultHistoryEntry } from './lib/history'
+import { loadHistory, saveHistoryEntry, type ConsultHistoryEntry, type SavedSimulationEntry } from './lib/history'
 
 function App() {
   const nav = useScreenNav('splash')
@@ -31,6 +32,7 @@ function App() {
   const [answer, setAnswer] = useState('')
   const [, setAnswerDone] = useState(false)
   const [error] = useState<string | null>(null)
+  const [simulationSession, setSimulationSession] = useState<SavedSimulationEntry | null>(null)
   // 8-1/8-2용 — 지금 result에 표시 중인 상담의 이력 id(자가보고 상태를 이 항목에
   // 이어 붙이거나, "지난 상담과 비교"에서 자기 자신을 제외하는 데 쓴다).
   const [historyEntryId, setHistoryEntryId] = useState<string | null>(null)
@@ -110,6 +112,21 @@ function App() {
     nav.push('result')
   }
 
+  function openSavedSimulation(entry: SavedSimulationEntry) {
+    setSimulationSession(entry)
+    nav.push('rights-simulation')
+  }
+
+  function openSavedSimulationResult(entry: SavedSimulationEntry) {
+    const matchingHistory = loadHistory().find((savedEntry) => savedEntry.id === entry.contextHistoryEntryId)
+    if (matchingHistory) {
+      viewHistoryEntry(matchingHistory)
+      return
+    }
+    setSimulationSession(entry)
+    nav.push('rights-simulation')
+  }
+
   return (
     <PhoneFrame>
       <ScreenTransition screenKey={nav.current}>
@@ -133,12 +150,18 @@ function App() {
             onNavigateToStats={() => nav.replaceAll('stats')}
             onNavigateToPrevention={() => nav.push('prevention')}
             onNavigateToLearning={() => nav.push('learning')}
+            onNavigateToSimulation={() => {
+              setSimulationSession(null)
+              nav.push('rights-simulation')
+            }}
             error={error} 
           />
         )}
         {nav.current === 'my-page' && (
           <MyPageScreen
             onOpenEntry={viewHistoryEntry}
+            onOpenSimulation={openSavedSimulation}
+            onOpenSimulationResult={openSavedSimulationResult}
             onStartConsult={() => startConsult('')}
             onOpenSettings={() => nav.push('settings')}
           />
@@ -148,6 +171,22 @@ function App() {
         {nav.current === 'consumer-rights' && <ConsumerRightsScreen onBack={nav.back} />}
         {nav.current === 'prevention' && <PreventionScreen onBack={nav.back} />}
         {nav.current === 'learning' && <LearningScreen onBack={nav.back} onStartConsult={startConsult} />}
+        {nav.current === 'rights-simulation' && (
+          <RightsSimulationScreen
+            onBack={() => {
+              setSimulationSession(null)
+              nav.back()
+            }}
+            context={{
+              text: consultQuery || text,
+              issues: classified?.issues ?? [],
+              evidence,
+              procedure,
+              historyEntryId,
+            }}
+            initialSession={simulationSession}
+          />
+        )}
         {nav.current === 'consult-input' && (
           <ConsultInputScreen
             onStartConsult={startConsult}

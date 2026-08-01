@@ -5,6 +5,8 @@ import type { Classified, Evidence, Procedure } from './api'
 // 전체 데이터(classified/answer/evidence/procedure)를 함께 저장한다.
 const HISTORY_KEY = 'kb-mirybom-history'
 const MAX_ENTRIES = 20
+const SIMULATION_HISTORY_KEY = 'kb-mirybom-simulations'
+const MAX_SIMULATION_ENTRIES = 12
 
 export interface ConsultHistoryEntry {
   id: string
@@ -20,6 +22,28 @@ export interface ConsultHistoryEntry {
   // 8-1/8-2용 — 사용자가 이 상담 결과 화면에서 직접 표시한 상태(자가 보고, 서버 전송 없음).
   possessedEvidence: string[]
   checkedDocuments: string[]
+}
+
+export interface SimulationSummary {
+  rights: string[]
+  action: string
+  note: string
+}
+
+export interface SimulationMessage {
+  role: 'assistant' | 'user'
+  text: string
+}
+
+export interface SavedSimulationEntry {
+  id: string
+  createdAt: string
+  messages: SimulationMessage[]
+  summary: SimulationSummary | null
+  completed: boolean
+  contextText?: string
+  contextIssues?: string[]
+  contextHistoryEntryId?: string | null
 }
 
 export function loadHistory(): ConsultHistoryEntry[] {
@@ -73,6 +97,50 @@ export function saveHistoryEntry(input: SaveHistoryInput): string {
   }
   persist([entry, ...loadHistory()].slice(0, MAX_ENTRIES))
   return entry.id
+}
+
+function persistSimulations(entries: SavedSimulationEntry[]): void {
+  try {
+    localStorage.setItem(SIMULATION_HISTORY_KEY, JSON.stringify(entries))
+  } catch {
+    // 저장 공간 초과 등은 저장 실패로만 두고 사용 흐름은 유지한다
+  }
+}
+
+export function loadSavedSimulations(): SavedSimulationEntry[] {
+  try {
+    const raw = localStorage.getItem(SIMULATION_HISTORY_KEY)
+    if (!raw) return []
+    const parsed: unknown = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed as SavedSimulationEntry[]
+  } catch {
+    return []
+  }
+}
+
+export function saveSimulationEntry(input: Omit<SavedSimulationEntry, 'id' | 'createdAt'> & { id?: string; createdAt?: string }): string {
+  const existingEntries = loadSavedSimulations()
+  const existingEntry = input.id ? existingEntries.find((entry) => entry.id === input.id) : null
+  const entry: SavedSimulationEntry = {
+    id: input.id ?? `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    createdAt: input.createdAt ?? existingEntry?.createdAt ?? new Date().toISOString(),
+    messages: input.messages,
+    summary: input.summary,
+    completed: input.completed,
+    contextText: input.contextText,
+    contextIssues: input.contextIssues,
+    contextHistoryEntryId: input.contextHistoryEntryId,
+  }
+  const next = input.id
+    ? existingEntries.map((saved) => (saved.id === input.id ? entry : saved))
+    : [entry, ...existingEntries]
+  persistSimulations(next.slice(0, MAX_SIMULATION_ENTRIES))
+  return entry.id
+}
+
+export function deleteSimulationEntry(id: string): void {
+  persistSimulations(loadSavedSimulations().filter((entry) => entry.id !== id))
 }
 
 function updateEntry(entryId: string, updater: (e: ConsultHistoryEntry) => ConsultHistoryEntry): void {

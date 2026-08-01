@@ -75,6 +75,140 @@ HIGH_CONFIDENCE_MIN_RATIO_N = 10
 ISSUE_SUGGESTION_MIN_CASES = 3
 
 
+def _classify_locally(text: str, override_issues: list | None) -> dict:
+    normalized = (text or "").lower()
+    if override_issues:
+        issues = override_issues
+    else:
+        issues = []
+        if any(keyword in normalized for keyword in ["els", "투자", "상품", "손실"]):
+            issues.append("설명의무_위반")
+            issues.append("적합성원칙_위반")
+        elif any(keyword in normalized for keyword in ["예금", "적금", "대출", "이자", "우대"]):
+            issues.append("우대금리_미적용")
+        elif any(keyword in normalized for keyword in ["수수료", "비용", "약관"]):
+            issues.append("수수료_비용분쟁")
+        else:
+            issues.append("설명의무_위반")
+
+    if not issues:
+        issues = ["설명의무_위반"]
+
+    products = []
+    if any(keyword in normalized for keyword in ["예금", "적금", "대출", "통장"]):
+        products.append("예적금")
+    if any(keyword in normalized for keyword in ["els", "투자", "펀드", "상품"]):
+        products.append("투자상품")
+    if not products:
+        products = ["예적금"]
+
+    factors = []
+    if "서명" in normalized or "동의" in normalized:
+        factors.append("서면·녹취")
+    if "직원" in normalized or "설명" in normalized:
+        factors.append("설명품질")
+    if "고령" in normalized or "노인" in normalized:
+        factors.append("고객상태")
+    if not factors:
+        factors = ["설명품질"]
+
+    return {
+        "issues": issues[:3],
+        "issue_candidates": [{"name": issue, "confidence": 0.86} for issue in issues[:3]],
+        "products": products[:2],
+        "factors": factors[:3],
+    }
+
+
+def _build_local_evidence(text: str, issues: list, products: list) -> dict:
+    issue_label = issues[0].replace("_", " ")
+    product_label = products[0] if products else "예적금"
+    if any(keyword in (text or "").lower() for keyword in ["els", "투자", "손실"]):
+        similar_cases = [{
+            "case_id": "demo-invest-1",
+            "title": "투자상품 설명 미흡과 적합성원칙 위반으로 일부 인용된 사례",
+            "case_no": "제2024-11호",
+            "result": "일부 인용",
+            "ratio": 58,
+            "date": "2024-07-01",
+            "summary": "가입 당시 위험성·수수료·손실 가능성을 충분히 설명하지 않아 분쟁조정위원회가 일부 인용했다.",
+        }]
+        law_articles = [{
+            "issue": issues[0],
+            "ref": "금융소비자보호법 제17조",
+            "article": "설명의무",
+            "content": "금융회사는 금융상품의 구조·위험·수수료 등을 충분히 설명해야 한다.",
+        }]
+    else:
+        similar_cases = [{
+            "case_id": "demo-banking-1",
+            "title": "우대조건 안내 미흡으로 인한 분쟁조정 사례",
+            "case_no": "제2023-45호",
+            "result": "조정 권고",
+            "ratio": 44,
+            "date": "2023-11-10",
+            "summary": "우대조건과 해지 조건이 충분히 안내되지 않아 불이익이 발생한 점이 인정됐다.",
+        }]
+        law_articles = [{
+            "issue": issues[0],
+            "ref": "금융소비자보호법 제18조",
+            "article": "적합성·설명 의무",
+            "content": "금융회사는 상품의 특성과 고객의 상황에 맞는 설명을 해야 한다.",
+        }]
+
+    return {
+        "similar_cases": similar_cases,
+        "law_articles": law_articles,
+        "precedents": ["금감원 분쟁조정위원회 사례 집계", f"{product_label} 관련 유사 민원 사례"],
+        "ratio_stats": {"min": 24, "median": 49, "max": 78, "avg": 48, "n": 16},
+        "criteria": [{
+            "id": "demo-criteria-1",
+            "title": f"{issue_label} 핵심 판단 기준",
+            "summary": "설명·적합성·증빙자료의 충족 여부를 중심으로 판단한다.",
+        }],
+        "respondent_arguments": [{
+            "basis": "고객이 직접 서명했다",
+            "count": 17,
+            "rejected_count": 13,
+            "rejected_rate": 76.5,
+            "partial_count": 4,
+            "samples": [{
+                "case_id": similar_cases[0]["case_id"],
+                "case_no": similar_cases[0]["case_no"],
+                "argument": "고객이 직접 확인·서명한 절차를 통해 설명 의무를 충족했다고 주장했다.",
+                "quote": "다만 설명의 충분성은 서명 여부만으로 판단할 수 없다.",
+            }],
+        }],
+        "evidence_patterns": [{
+            "type": "계약서·동의서",
+            "source_terms": ["서명", "동의서", "녹취"],
+            "total": 14,
+            "favorable_rate": 35,
+            "unfavorable_rate": 65,
+            "ratio_comparison": {"with_avg": 53, "with_n": 7, "without_avg": 39, "without_n": 7},
+        }],
+        "adjacent_issue": None,
+        "kb_terms": [{
+            "source_file": "demo_terms.md",
+            "product": product_label,
+            "text": f"{issue_label}는 금융상품 판매 과정에서 가장 자주 거론되는 쟁점입니다.",
+            "issues": issues,
+        }],
+        "issue_suggestion": None,
+    }
+
+
+def _build_local_answer(text: str, evidence: dict, tone: str) -> str:
+    issue_label = evidence["law_articles"][0]["issue"].replace("_", " ") if evidence.get("law_articles") else "상품 판매"
+    summary = f"입력하신 상황은 {issue_label}와 관련된 분쟁 쟁점으로 보입니다. 실제 서버를 붙이지 못한 데모 환경이지만, 금감원 분쟁조정에서 자주 검토되는 설명·적합성·증빙자료 흐름으로 정리해 드립니다."
+    guidance = "은행 쪽에서는 고객의 서명이나 동의 절차를 근거로 설명 의무를 다했다고 주장할 수 있고, 반대로 고객은 설명의 충분성과 위험성 노출 여부를 강조해 대응할 수 있습니다."
+    if tone == "assertive":
+        closing = "이런 흐름에 맞춰 서류와 진술 순서를 미리 정리해 두면 분쟁조정 과정에서 훨씬 유리하게 대응할 수 있습니다."
+    else:
+        closing = "표본이 충분하지 않은 만큼 참고용으로 보되, 서류와 진술 포인트를 먼저 정리해 두면 실제 상담에서 더 안정적으로 준비할 수 있습니다."
+    return f"{summary}\n\n{guidance}\n\n{closing} 이 안내는 법률 자문이 아니며 참고용 정보입니다."
+
+
 def build_documents(issues: list) -> list:
     seen, docs = set(), []
     for issue in issues or ["기타"]:
@@ -185,6 +319,31 @@ async def run_consult(text, override_issues, driver, database, sync_client, asyn
     모호 분류 경로: agent_step(classify, status=needs_clarification) -> needs_clarification
     으로 끝나고(evidence/answer 없음), 사용자가 후보 쟁점을 고르면 override_issues로 재호출된다.
     """
+
+    if not sync_client or not async_client or not driver:
+        classified = _classify_locally(text, override_issues)
+        reason = f"표준 입력 패턴을 기준으로 쟁점 {len(classified['issues'])}개를 정리했습니다"
+        yield "agent_step", {"step": "classify", "status": "done", "decision_reason": reason}
+        yield "classified", {
+            "issues": classified["issues"],
+            "products": classified["products"],
+            "factors": classified["factors"],
+        }
+
+        evidence = _build_local_evidence(text, classified["issues"], classified["products"])
+        yield "agent_step", {"step": "search", "status": "done", "decision_reason": "로컬 데모 근거를 기반으로 유사 사례와 법조항을 정리합니다"}
+        yield "agent_step", {"step": "argument_analysis", "status": "done", "decision_reason": "은행 반박 논리와 판단 포인트를 준비합니다"}
+        yield "agent_step", {"step": "evidence_evaluation", "status": "done", "decision_reason": "증거 자료와 준비 서류 포인트를 정리합니다"}
+        yield "evidence", evidence
+        procedure = {"steps": PROCEDURE_STEPS, "documents": build_documents(classified["issues"])}
+        yield "procedure", procedure
+        tone = "assertive"
+        answer_reason = "로컬 데모 기반으로 사례 흐름과 대응 포인트를 정리합니다"
+        yield "agent_step", {"step": "answer", "status": "done", "decision_reason": answer_reason}
+        answer = _build_local_answer(text, evidence, tone)
+        yield "answer_chunk", {"delta": answer}
+        yield "done", {"answer": answer}
+        return
 
     # --- ① 분류 스텝 ---
     classified = await _resolve_classified(text, override_issues, sync_client)

@@ -399,6 +399,97 @@ export interface ConsultStreamHandlers {
   onError?: (message: string) => void
 }
 
+function buildMockConsultPayload(text: string) {
+  const normalized = text.trim() || '금융 분쟁 상담'
+  const issues = normalized.includes('ELS') || normalized.includes('예금') || normalized.includes('투자')
+    ? ['적합성원칙 위반', '설명의무 위반']
+    : ['설명의무 위반', '부당권유']
+
+  const classified: Classified = {
+    issues,
+    products: ['예적금', '투자상품'],
+    factors: ['설명 미흡', '투자성향 확인 누락'],
+    confidence: 0.78,
+  }
+
+  const evidence: Evidence = {
+    similar_cases: [
+      {
+        case_id: 'mock-case-1',
+        title: '설명의무 위반과 적합성원칙 위반으로 인한 배상 인정 사례',
+        case_no: '제2023-17호',
+        result: '일부 인용',
+        ratio: 62,
+        date: '2023-08-01',
+        summary: '가입 당시 투자성향·위험성 설명이 충분치 않았고, 고령 고객에게 불리한 상품이 권유된 점이 인정됐다.',
+      },
+    ],
+    law_articles: [
+      {
+        issue: issues[0],
+        ref: '금융소비자보호법 제17조',
+        article: '설명의무',
+        content: '금융회사는 금융상품의 구조·위험·수수료 등에 대해 적절하게 설명해야 한다.',
+      },
+    ],
+    precedents: ['KB금융지주 분쟁조정 사례', 'ELW 불완전판매 관련 사례'],
+    ratio_stats: { min: 20, median: 45, max: 80, avg: 48, n: 12 },
+    criteria: [
+      { id: 'criteria-1', title: '설명 의무의 충족 여부', summary: '고객의 이해가능성과 위험성 설명이 충분했는지 확인한다.' },
+    ],
+    respondent_arguments: [
+      {
+        basis: '고객이 직접 서명했다',
+        count: 18,
+        rejected_count: 14,
+        rejected_rate: 77.8,
+        partial_count: 4,
+        samples: [
+          {
+            case_id: 'mock-case-1',
+            case_no: '제2023-17호',
+            argument: '고객이 직접 서명하여 설명 의무를 충분히 이행했다.',
+            quote: '은행의 설명이 충분했다고 보기 어렵다.',
+          },
+        ],
+      },
+    ],
+    evidence_patterns: [
+      {
+        type: '계약서·동의서',
+        source_terms: ['서명', '동의서'],
+        total: 14,
+        favorable_rate: 34,
+        unfavorable_rate: 66,
+        ratio_comparison: { with_avg: 52, with_n: 7, without_avg: 38, without_n: 7 },
+      },
+    ],
+    adjacent_issue: null,
+    kb_terms: [
+      {
+        source_file: 'kb_terms_sample.md',
+        product: '투자상품',
+        text: '설명의무와 적합성원칙은 금융상품 판매에서 핵심 기준이다.',
+        issues,
+      },
+    ],
+    issue_suggestion: null,
+  }
+
+  const procedure: Procedure = {
+    steps: [
+      '분쟁조정 신청서 작성',
+      '증빙자료 정리',
+      '금감원 제출 및 접수 완료',
+    ],
+    documents: ['계약서 사본', '상품설명서', '통화·상담 녹취', '입출금 내역'],
+  }
+
+  const answer = `입력하신 상황은 ${issues.join(', ')} 쟁점이 함께 검토될 가능성이 높습니다. 현재 데모 환경에서는 백엔드 연결이 없어, 실제 데이터 대신 핵심 쟁점·근거·준비 서류 기준을 정리한 샘플 결과를 보여드립니다. 실제 상담이 정상적으로 연결되면 이 흐름이 금감원 사례와 법조항으로 보강됩니다.`
+
+  return { classified, evidence, procedure, answer }
+}
+
 /** POST /api/consult의 SSE 스트림을 읽어 이벤트별 콜백을 호출한다. EventSource는 POST 바디를
     지원하지 않으므로 fetch()로 요청한 뒤 response.body를 직접 파싱한다(표준 SSE 프레이밍:
     "event: <name>\ndata: <json>\n\n").
@@ -410,74 +501,90 @@ export async function streamConsult(
   signal?: AbortSignal,
   overrideIssues?: string[],
 ): Promise<void> {
-  const res = await fetch(`${API_BASE}/api/consult`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text, override_issues: overrideIssues ?? null }),
-    signal,
-  })
-  if (!res.ok || !res.body) {
-    const body = await res.json().catch(() => null)
-    const detail = typeof body?.detail === 'string' ? body.detail : null
-    throw new Error(detail ?? `consult 요청 실패 (${res.status})`)
-  }
-
-  const reader = res.body.getReader()
-  const decoder = new TextDecoder('utf-8')
-  let buffer = ''
-
-  function dispatch(eventName: string, rawData: string) {
-    let data: unknown
-    try {
-      data = JSON.parse(rawData)
-    } catch {
-      return
+  try {
+    const res = await fetch(`${API_BASE}/api/consult`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, override_issues: overrideIssues ?? null }),
+      signal,
+    })
+    if (!res.ok || !res.body) {
+      const body = await res.json().catch(() => null)
+      const detail = typeof body?.detail === 'string' ? body.detail : null
+      throw new Error(detail ?? `consult 요청 실패 (${res.status})`)
     }
-    switch (eventName) {
-      case 'agent_step':
-        handlers.onAgentStep?.(data as AgentStep)
-        break
-      case 'needs_clarification':
-        handlers.onNeedsClarification?.((data as { candidates: ClarificationCandidate[] }).candidates)
-        break
-      case 'classified':
-        handlers.onClassified?.(data as Classified)
-        break
-      case 'evidence':
-        handlers.onEvidence?.(data as Evidence)
-        break
-      case 'procedure':
-        handlers.onProcedure?.(data as Procedure)
-        break
-      case 'answer_chunk':
-        handlers.onAnswerChunk?.((data as { delta: string }).delta)
-        break
-      case 'done':
-        handlers.onDone?.((data as { answer: string }).answer)
-        break
-      default:
-        break
-    }
-  }
 
-  for (;;) {
-    const { done, value } = await reader.read()
-    if (done) break
-    buffer += decoder.decode(value, { stream: true })
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder('utf-8')
+    let buffer = ''
 
-    let sepIdx: number
-    while ((sepIdx = buffer.indexOf('\n\n')) !== -1) {
-      const rawEvent = buffer.slice(0, sepIdx)
-      buffer = buffer.slice(sepIdx + 2)
-
-      let eventName = 'message'
-      const dataLines: string[] = []
-      for (const line of rawEvent.split('\n')) {
-        if (line.startsWith('event:')) eventName = line.slice(6).trim()
-        else if (line.startsWith('data:')) dataLines.push(line.slice(5).trim())
+    function dispatch(eventName: string, rawData: string) {
+      let data: unknown
+      try {
+        data = JSON.parse(rawData)
+      } catch {
+        return
       }
-      if (dataLines.length > 0) dispatch(eventName, dataLines.join('\n'))
+      switch (eventName) {
+        case 'agent_step':
+          handlers.onAgentStep?.(data as AgentStep)
+          break
+        case 'needs_clarification':
+          handlers.onNeedsClarification?.((data as { candidates: ClarificationCandidate[] }).candidates)
+          break
+        case 'classified':
+          handlers.onClassified?.(data as Classified)
+          break
+        case 'evidence':
+          handlers.onEvidence?.(data as Evidence)
+          break
+        case 'procedure':
+          handlers.onProcedure?.(data as Procedure)
+          break
+        case 'answer_chunk':
+          handlers.onAnswerChunk?.((data as { delta: string }).delta)
+          break
+        case 'done':
+          handlers.onDone?.((data as { answer: string }).answer)
+          break
+        default:
+          break
+      }
     }
+
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+
+      let sepIdx: number
+      while ((sepIdx = buffer.indexOf('\n\n')) !== -1) {
+        const rawEvent = buffer.slice(0, sepIdx)
+        buffer = buffer.slice(sepIdx + 2)
+
+        let eventName = 'message'
+        const dataLines: string[] = []
+        for (const line of rawEvent.split('\n')) {
+          if (line.startsWith('event:')) eventName = line.slice(6).trim()
+          else if (line.startsWith('data:')) dataLines.push(line.slice(5).trim())
+        }
+        if (dataLines.length > 0) dispatch(eventName, dataLines.join('\n'))
+      }
+    }
+  } catch (error) {
+    const fallback = buildMockConsultPayload(text)
+    const fallbackMessage = error instanceof Error ? error.message : '알 수 없는 오류'
+    handlers.onAgentStep?.({ step: 'classify', status: 'done', decision_reason: '백엔드 응답이 없어 데모용 샘플 결과를 사용합니다.' })
+    handlers.onAgentStep?.({ step: 'search', status: 'done', decision_reason: '샘플 유사 사례와 법조항을 정리합니다.' })
+    handlers.onAgentStep?.({ step: 'argument_analysis', status: 'done', decision_reason: '은행 반박 논리와 판단 포인트를 요약합니다.' })
+    handlers.onAgentStep?.({ step: 'evidence_evaluation', status: 'done', decision_reason: '증거 자료와 서류 준비 흐름을 보강합니다.' })
+    handlers.onAgentStep?.({ step: 'answer', status: 'done', decision_reason: '응답을 최종 정리합니다.' })
+    handlers.onClassified?.(fallback.classified)
+    handlers.onEvidence?.(fallback.evidence)
+    handlers.onProcedure?.(fallback.procedure)
+    handlers.onAnswerChunk?.(fallback.answer)
+    handlers.onDone?.(fallback.answer)
+    handlers.onError?.(`백엔드 응답 실패로 데모용 결과를 표시합니다. (${fallbackMessage})`)
   }
 }
 

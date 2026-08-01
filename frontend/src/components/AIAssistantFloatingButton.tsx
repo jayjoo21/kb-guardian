@@ -23,6 +23,16 @@ export function AIAssistantFloatingButton({
     const trimmed = input.trim()
     const lower = trimmed.toLowerCase()
 
+    if (lower.includes('시뮬레이션') || lower.includes('권리 찾기')) {
+      return {
+        answer:
+          '권리 찾기 시뮬레이션으로 바로 이동해 드릴게요. 몇 가지 선택지에 답하면 내 상황에 맞는 권리와 다음 행동을 정리해 드립니다.',
+        source: '모의 응답',
+        action: 'navigate_to_screen' as const,
+        action_data: 'rights-simulation',
+      }
+    }
+
     if (lower.includes('서류') || lower.includes('문서') || lower.includes('체크')) {
       return {
         answer:
