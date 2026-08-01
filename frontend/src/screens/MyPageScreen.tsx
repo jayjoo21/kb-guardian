@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
-import { ArrowRight, Heart, MessageSquareText, Settings, ShieldCheck, Wallet } from 'lucide-react'
-import { loadHistory, type ConsultHistoryEntry } from '../lib/history'
+import { useEffect, useMemo, useState } from 'react'
+import { ArrowRight, Heart, MessageSquareText, Settings, ShieldCheck, Sparkles, Trash2, RotateCcw, Wallet } from 'lucide-react'
+import { deleteSimulationEntry, loadHistory, loadSavedSimulations, saveSimulationEntry, type ConsultHistoryEntry, type SavedSimulationEntry } from '../lib/history'
 import styles from './MyPageScreen.module.css'
 
 interface MyPageScreenProps {
   onOpenEntry: (entry: ConsultHistoryEntry) => void
+  onOpenSimulation: (entry: SavedSimulationEntry) => void
+  onOpenSimulationResult: (entry: SavedSimulationEntry) => void
   onStartConsult: () => void
   onOpenSettings: () => void
 }
@@ -98,17 +100,56 @@ const favoriteIssues = [
   },
 ]
 
-export function MyPageScreen({ onOpenEntry, onStartConsult, onOpenSettings }: MyPageScreenProps) {
+export function MyPageScreen({ onOpenEntry, onOpenSimulation, onOpenSimulationResult, onStartConsult, onOpenSettings }: MyPageScreenProps) {
   const [entries, setEntries] = useState<ConsultHistoryEntry[]>([])
+  const [simulations, setSimulations] = useState<SavedSimulationEntry[]>([])
   const [activeFavoriteTab, setActiveFavoriteTab] = useState<'cases' | 'issues'>('cases')
 
-  useEffect(() => {
+  function refreshData() {
     const loaded = loadHistory()
     setEntries(loaded.length > 0 ? loaded : mockEntries)
+    setSimulations(loadSavedSimulations())
+  }
+
+  useEffect(() => {
+    refreshData()
   }, [])
 
   const totalAssets = 1830000 + 8450000
   const suspiciousProducts = 0
+
+  const issueDistribution = useMemo(() => {
+    const counts: Record<string, number> = {}
+    entries.forEach((entry) => {
+      entry.issues.forEach((issue) => {
+        counts[issue] = (counts[issue] ?? 0) + 1
+      })
+    })
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4)
+  }, [entries])
+
+  const maxIssueCount = Math.max(1, ...issueDistribution.map(([, count]) => count))
+
+  function handleDeleteSimulation(id: string) {
+    deleteSimulationEntry(id)
+    refreshData()
+  }
+
+  function handleResaveSimulation(simulation: SavedSimulationEntry) {
+    saveSimulationEntry({
+      id: simulation.id,
+      createdAt: simulation.createdAt,
+      messages: simulation.messages,
+      summary: simulation.summary,
+      completed: simulation.completed,
+      contextText: simulation.contextText,
+      contextIssues: simulation.contextIssues,
+      contextHistoryEntryId: simulation.contextHistoryEntryId,
+    })
+    refreshData()
+  }
 
   return (
     <div className={styles.screen}>
@@ -164,6 +205,56 @@ export function MyPageScreen({ onOpenEntry, onStartConsult, onOpenSettings }: My
       <section className={styles.section}>
         <div className={styles.sectionHeader}>
           <div>
+            <p className={styles.eyebrow}>요약</p>
+            <h2 className={styles.sectionTitle}>상담 흐름 요약</h2>
+          </div>
+        </div>
+
+        <div className={styles.insightGrid}>
+          <div className={styles.insightCard}>
+            <div className={styles.insightCardHeader}>
+              <span className={styles.eyebrow}>시기별 상담</span>
+              <strong>{entries.length}건</strong>
+            </div>
+            <div className={styles.sparkline}>
+              <svg viewBox="0 0 220 80" role="img" aria-label="상담 이력 분포">
+                {issueDistribution.length > 0 ? (
+                  issueDistribution.map(([issue, count], index) => {
+                    const height = (count / maxIssueCount) * 48 + 12
+                    const x = 20 + index * 48
+                    return (
+                      <g key={issue}>
+                        <rect x={x} y={68 - height} width={24} height={height} rx={8} className={styles.chartBar} />
+                        <text x={x + 12} y={74} textAnchor="middle" className={styles.chartLabel}>{issue.slice(0, 3)}</text>
+                      </g>
+                    )
+                  })
+                ) : (
+                  <text x="110" y="40" textAnchor="middle" className={styles.chartFallback}>데이터가 쌓이면 차트로 보여드릴게요.</text>
+                )}
+              </svg>
+            </div>
+          </div>
+          <div className={styles.insightMetricList}>
+            <div className={styles.metricCard}>
+              <span>저장한 시뮬레이션</span>
+              <strong>{simulations.length}개</strong>
+            </div>
+            <div className={styles.metricCard}>
+              <span>체크한 서류</span>
+              <strong>{entries.reduce((sum, entry) => sum + entry.checkedDocuments.length, 0)}건</strong>
+            </div>
+            <div className={styles.metricCard}>
+              <span>안심 지표</span>
+              <strong>{suspiciousProducts === 0 ? '안정' : `${suspiciousProducts}건`}</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <div>
             <p className={styles.eyebrow}>이력</p>
             <h2 className={styles.sectionTitle}>나의 상담 및 민원 이력</h2>
           </div>
@@ -197,6 +288,54 @@ export function MyPageScreen({ onOpenEntry, onStartConsult, onOpenSettings }: My
               </li>
             ))}
           </ol>
+        )}
+      </section>
+
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <div>
+            <p className={styles.eyebrow}>시뮬레이션</p>
+            <h2 className={styles.sectionTitle}>저장한 권리 찾기 결과</h2>
+          </div>
+        </div>
+
+        {simulations.length === 0 ? (
+          <div className={styles.emptyState}>
+            <p>저장한 시뮬레이션 결과가 아직 없어요.</p>
+          </div>
+        ) : (
+          <div className={styles.simulationList}>
+            {simulations.map((simulation) => (
+              <div key={simulation.id} className={styles.simulationCard}>
+                <button type="button" className={styles.simulationMainButton} onClick={() => onOpenSimulation(simulation)}>
+                  <div className={styles.simulationMeta}>
+                    <span className={styles.timelineBadge}><Sparkles size={12} /> 시뮬레이션</span>
+                    <span className={styles.timelineDate}>{formatDate(simulation.createdAt)}</span>
+                  </div>
+                  <strong className={styles.favoriteTitle}>{simulation.contextText ? simulation.contextText.slice(0, 36) : '권리 찾기 결과'}</strong>
+                  <p className={styles.favoriteSummary}>{simulation.summary?.action ?? '저장된 권리 대응 흐름을 다시 확인해 보세요.'}</p>
+                  {simulation.summary?.rights && (
+                    <div className={styles.simulationRights}>
+                      {simulation.summary.rights.slice(0, 3).map((right) => (
+                        <span key={right} className={styles.simulationChip}>{right}</span>
+                      ))}
+                    </div>
+                  )}
+                </button>
+                <div className={styles.simulationActions}>
+                  <button type="button" className={styles.smallActionButton} onClick={() => onOpenSimulationResult(simulation)}>
+                    <ArrowRight size={14} /> 상담 결과
+                  </button>
+                  <button type="button" className={styles.smallActionButton} onClick={() => handleResaveSimulation(simulation)}>
+                    <RotateCcw size={14} /> 재저장
+                  </button>
+                  <button type="button" className={`${styles.smallActionButton} ${styles.smallActionButtonDanger}`} onClick={() => handleDeleteSimulation(simulation.id)}>
+                    <Trash2 size={14} /> 삭제
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </section>
 

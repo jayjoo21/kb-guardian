@@ -44,10 +44,11 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 logging.getLogger("neo4j").setLevel(logging.WARNING)
 logger = logging.getLogger("main")
 
-NEO4J_URI = os.environ["NEO4J_URI"]
-NEO4J_USERNAME = os.environ["NEO4J_USERNAME"]
-NEO4J_PASSWORD = os.environ["NEO4J_PASSWORD"]
+NEO4J_URI = os.environ.get("NEO4J_URI", "neo4j://localhost:7687")
+NEO4J_USERNAME = os.environ.get("NEO4J_USERNAME", "neo4j")
+NEO4J_PASSWORD = os.environ.get("NEO4J_PASSWORD", "password")
 NEO4J_DATABASE = os.environ.get("NEO4J_DATABASE") or None
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 
 _DEFAULT_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:5174", "http://127.0.0.1:5174", "http://localhost:5175", "http://127.0.0.1:5175", "http://localhost:5176", "http://127.0.0.1:5176", "http://localhost:5177", "http://127.0.0.1:5177"]
 _extra_origins = [o.strip() for o in os.environ.get("ALLOWED_ORIGINS", "").split(",") if o.strip()]
@@ -61,14 +62,31 @@ _scan_limiter = RateLimiter(max_requests=3, window_seconds=3600)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USERNAME, NEO4J_PASSWORD))
-    app.state.driver.verify_connectivity()
-    app.state.anthropic = anthropic.Anthropic()
-    app.state.anthropic_async = anthropic.AsyncAnthropic()  # /api/consult 스트리밍 전용
-    logger.info("Neo4j 연결 확인 완료 (database=%s)", NEO4J_DATABASE)
+    app.state.driver = None
+    app.state.anthropic = None
+    app.state.anthropic_async = None
+    try:
+        app.state.driver = GraphDatabase.driver(NEO4J_URI, auth=(NEO4J_USERNAME, NEO4J_PASSWORD))
+        app.state.driver.verify_connectivity()
+        logger.info("Neo4j 연결 확인 완료 (database=%s)", NEO4J_DATABASE)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Neo4j 연결을 확인하지 못해 로컬 데모 모드로 동작합니다: %s", exc)
+
+    if ANTHROPIC_API_KEY:
+        try:
+            app.state.anthropic = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+            app.state.anthropic_async = anthropic.AsyncAnthropic(api_key=ANTHROPIC_API_KEY)
+            logger.info("Anthropic 클라이언트 초기화 완료")
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Anthropic 초기화 실패, 로컬 데모 모드로 동작합니다: %s", exc)
+    else:
+        logger.warning("ANTHROPIC_API_KEY가 없어 로컬 데모 모드로 동작합니다")
+
     yield
-    app.state.driver.close()
-    await app.state.anthropic_async.close()
+    if app.state.driver is not None:
+        app.state.driver.close()
+    if app.state.anthropic_async is not None:
+        await app.state.anthropic_async.close()
 
 
 app = FastAPI(title="KB Guardian API", lifespan=lifespan)
@@ -83,14 +101,20 @@ app.add_middleware(
 
 @app.get("/health")
 async def health():
-    try:
-        app.state.driver.verify_connectivity()
-        neo4j_ok = True
-    except Neo4jError:
-        neo4j_ok = False
-    except Exception:
-        neo4j_ok = False
-    return {"status": "ok" if neo4j_ok else "degraded", "neo4j": neo4j_ok}
+    neo4j_ok = False
+    if app.state.driver is not None:
+        try:
+            app.state.driver.verify_connectivity()
+            neo4j_ok = True
+        except Neo4jError:
+            neo4j_ok = False
+        except Exception:
+            neo4j_ok = False
+    return {
+        "status": "ok" if neo4j_ok or app.state.anthropic is not None else "degraded",
+        "neo4j": neo4j_ok,
+        "mode": "demo" if app.state.driver is None else "graph",
+    }
 
 
 def _sse(event: str, data) -> str:
@@ -103,6 +127,89 @@ def _validate_override_issues(issues):
     invalid = [i for i in issues if i not in ISSUE_ENUM]
     if invalid:
         raise HTTPException(status_code=400, detail=f"유효하지 않은 쟁점: {invalid}")
+
+
+def _demo_stat_payload() -> dict:
+    return {
+        "total_cases": 196,
+        "issues": [
+            {"issue": "설명의무_위반", "case_count": 68, "ratio_stats": {"min": 18, "median": 47, "max": 82, "avg": 49, "n": 68}},
+            {"issue": "적합성원칙_위반", "case_count": 41, "ratio_stats": {"min": 22, "median": 50, "max": 78, "avg": 51, "n": 41}},
+            {"issue": "부당권유", "case_count": 34, "ratio_stats": {"min": 20, "median": 43, "max": 74, "avg": 45, "n": 34}},
+        ],
+        "corpus": {
+            "precedents": 196,
+            "law_articles": 24,
+            "criteria": 15,
+            "date_range": {"from_year": 2019, "to_year": 2024},
+            "latest_case_date": "2024-08-01",
+        },
+        "overall_ratio_distribution": {
+            "min": 10,
+            "median": 45,
+            "max": 90,
+            "avg": 47,
+            "p25": 30,
+            "p75": 60,
+            "n": 196,
+            "values": [20, 35, 45, 50, 58, 62, 70],
+        },
+        "argument_basis_overview": [
+            {"basis": "고객이 직접 서명했다", "count": 54, "rejected_count": 41, "rejected_rate": 76.0},
+            {"basis": "설명서·약관상 위험성 표기가 있었다", "count": 31, "rejected_count": 18, "rejected_rate": 58.0},
+        ],
+        "evidence_type_overview": [
+            {"type": "계약서·동의서", "source_terms": ["서명", "동의서"], "total": 88, "favorable_rate": 35, "unfavorable_rate": 65},
+            {"type": "녹취·상담 기록", "source_terms": ["녹취", "상담"], "total": 54, "favorable_rate": 67, "unfavorable_rate": 33},
+        ],
+    }
+
+
+def _demo_consumer_rights_payload() -> dict:
+    return {
+        "rights": [
+            {
+                "id": "explanation-duty",
+                "title": "설명의무를 확인받을 권리",
+                "description": "금융회사는 상품의 구조·위험·수수료를 충분히 설명해야 합니다.",
+                "when_to_use": "상품 가입·추천 과정에서 설명이 부족했다고 느낄 때",
+                "how_to_exercise": "가입 당시 상담·설명 메모, 녹취, 계약서 사본을 보관하세요.",
+                "law_article_ref": "금융소비자보호법 제17조",
+                "law_article_detail": {"ref": "제17조", "article": "설명의무", "content": "금융회사는 금융상품의 구조·위험·수수료 등에 대해 충분히 설명해야 한다."},
+            },
+            {
+                "id": "suitability",
+                "title": "적합성 원칙 확인을 요구할 권리",
+                "description": "고객의 투자성향과 재산상황에 맞는 상품인지 확인받을 수 있습니다.",
+                "when_to_use": "투자성향과 무관한 상품이 권유됐을 때",
+                "how_to_exercise": "투자성향 확인서와 상담 내용을 함께 정리하세요.",
+                "law_article_ref": "금융소비자보호법 제18조",
+                "law_article_detail": {"ref": "제18조", "article": "적합성 원칙", "content": "금융회사는 고객의 상황에 적합한 상품을 권유해야 한다."},
+            },
+        ]
+    }
+
+
+def _demo_product_stats_payload() -> dict:
+    return {
+        "products": [
+            {"product": "예적금", "case_count": 73, "ratio_stats": {"min": 18, "median": 40, "max": 72, "avg": 42, "n": 73}},
+            {"product": "투자상품", "case_count": 67, "ratio_stats": {"min": 21, "median": 49, "max": 82, "avg": 51, "n": 67}},
+        ]
+    }
+
+
+def _demo_learning_payload() -> dict:
+    return {
+        "points": [
+            {"issue": "설명의무_위반", "case_id": "demo-1", "summary": "설명 미흡이 반복되면 분쟁조정에서 핵심 쟁점이 됩니다.", "case_count": 68, "avg_ratio": 49},
+            {"issue": "적합성원칙_위반", "case_id": "demo-2", "summary": "고객 성향과 맞지 않는 상품 권유는 사전 점검 포인트가 됩니다.", "case_count": 41, "avg_ratio": 51},
+        ],
+        "terms": [
+            {"term": "설명의무", "description": "금융회사가 상품의 구조·위험·수수료를 충분히 설명해야 하는 의무입니다.", "case_count": 68, "example_cases": ["제2024-11호", "제2023-45호"]},
+            {"term": "적합성원칙", "description": "고객의 성향·상황에 적합한 상품인지 확인해야 한다는 원칙입니다.", "case_count": 41, "example_cases": ["제2023-12호"]},
+        ],
+    }
 
 
 async def _consult_stream(req: ConsultRequest, driver, sync_client, async_client):

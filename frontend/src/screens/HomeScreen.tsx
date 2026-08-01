@@ -65,10 +65,11 @@ interface HomeScreenProps {
   onNavigateToStats?: () => void
   onNavigateToPrevention?: () => void
   onNavigateToLearning?: () => void
+  onNavigateToSimulation?: () => void
   error?: string | null
 }
 
-export function HomeScreen({ onStartConsult, onNavigateToRights, onNavigateToStats, onNavigateToPrevention, onNavigateToLearning, error = null }: HomeScreenProps) {
+export function HomeScreen({ onStartConsult, onNavigateToRights, onNavigateToStats, onNavigateToPrevention, onNavigateToLearning, onNavigateToSimulation, error = null }: HomeScreenProps) {
   const [issueCounts, setIssueCounts] = useState<Record<string, number>>({})
   const [activeTab, setActiveTab] = useState<'prevention' | 'safety'>('prevention')
   const [isNotiOpen, setIsNotiOpen] = useState(false)
@@ -103,7 +104,7 @@ export function HomeScreen({ onStartConsult, onNavigateToRights, onNavigateToSta
         onNavigateToRights?.()
         break
       case 'simulation':
-        onNavigateToRights?.()
+        onNavigateToSimulation?.()
         break
       case 'rights-alert':
         onNavigateToRights?.()

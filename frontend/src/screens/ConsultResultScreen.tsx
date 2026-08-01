@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { TopAppBar } from '../app/TopAppBar'
 import { Loader2, CheckCircle2, Circle } from 'lucide-react'
 import { 
@@ -33,10 +33,12 @@ const AGENT_STEPS = [
 export function ConsultResultScreen({ query, onBack, onComplete }: ConsultResultScreenProps) {
   const [completedSteps, setCompletedSteps] = useState<string[]>([])
   const [currentStep, setCurrentStep] = useState<string>('classify')
-  const [classified, setClassified] = useState<Classified | null>(null)
-  const [evidence, setEvidence] = useState<Evidence | null>(null)
-  const [procedure, setProcedure] = useState<Procedure | null>(null)
-  const [, setAnswer] = useState<string>('')
+  const latestDataRef = useRef({
+    classified: null as Classified | null,
+    evidence: null as Evidence | null,
+    procedure: null as Procedure | null,
+    answer: '',
+  })
 
   const handlers: ConsultStreamHandlers = {
     onAgentStep: (data: AgentStep) => {
@@ -51,14 +53,29 @@ export function ConsultResultScreen({ query, onBack, onComplete }: ConsultResult
         return prev
       })
     },
-    onClassified: (data) => setClassified(data),
-    onEvidence: (data) => setEvidence(data),
-    onProcedure: (data) => setProcedure(data),
-    onAnswerChunk: (delta) => setAnswer((prev) => prev + delta),
+    onClassified: (data) => {
+      latestDataRef.current.classified = data
+    },
+    onEvidence: (data) => {
+      latestDataRef.current.evidence = data
+    },
+    onProcedure: (data) => {
+      latestDataRef.current.procedure = data
+    },
+    onAnswerChunk: (delta) => {
+      latestDataRef.current.answer = `${latestDataRef.current.answer}${delta}`
+    },
     onDone: (finalAnswer) => {
       setCompletedSteps(AGENT_STEPS.map(s => s.step))
-      if (classified && evidence) {
-        onComplete({ classified, evidence, procedure, answer: finalAnswer })
+      latestDataRef.current.answer = finalAnswer
+      const data = latestDataRef.current
+      if (data.classified && data.evidence) {
+        onComplete({
+          classified: data.classified,
+          evidence: data.evidence,
+          procedure: data.procedure,
+          answer: finalAnswer,
+        })
       }
     },
     onError: (msg) => console.error('Consult error:', msg),
