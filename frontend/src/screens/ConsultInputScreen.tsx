@@ -145,7 +145,7 @@ export function ConsultInputScreen({ onStartConsult, onBack }: ConsultInputScree
             </div>
             <div className={styles.toolbar}>
               <MicButton onResult={(t) => setText((prev) => (prev ? `${prev} ${t}` : t))} />
-              <DocumentScanner />
+              <DocumentScanner compact />
             </div>
             <button type="submit" className={styles.submit} disabled={!text.trim()}>
               상담 시작하기

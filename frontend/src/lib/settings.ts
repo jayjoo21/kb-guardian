@@ -34,3 +34,19 @@ export function setVoiceGuide(enabled: boolean): void {
     // 저장 공간이 없으면 이번 세션에서만 적용
   }
 }
+
+const RIGHTS_ALERT_KEY = 'kb-mirybom-rights-alert-subscribed'
+
+/** "맞춤형 권리 알림" 구독 여부 — 실제 발송 기능은 아직 없고(준비 중), 원할 때
+    구독 상태만 기기에 저장해 둔다. */
+export function loadRightsAlertSubscribed(): boolean {
+  return localStorage.getItem(RIGHTS_ALERT_KEY) === '1'
+}
+
+export function setRightsAlertSubscribed(enabled: boolean): void {
+  try {
+    localStorage.setItem(RIGHTS_ALERT_KEY, enabled ? '1' : '0')
+  } catch {
+    // 저장 공간이 없으면 이번 세션에서만 적용
+  }
+}

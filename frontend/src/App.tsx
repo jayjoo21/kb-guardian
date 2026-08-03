@@ -17,6 +17,8 @@ import { ConsumerRightsScreen } from './screens/ConsumerRightsScreen'
 import { PreventionScreen } from './screens/PreventionScreen'
 import { LearningScreen } from './screens/LearningScreen'
 import { RightsSimulationScreen } from './screens/RightsSimulationScreen'
+import { EvidenceEvaluationScreen } from './screens/EvidenceEvaluationScreen'
+import { ComplaintDraftFormScreen } from './screens/ComplaintDraftFormScreen'
 import { AIAssistantFloatingButton } from './components/AIAssistantFloatingButton'
 import { type ResultTabId } from './screens/result/ResultTabBar'
 import { type PreventionMode } from './screens/PreventionScreen'
@@ -38,7 +40,7 @@ function App() {
   const [simulationSession, setSimulationSession] = useState<SavedSimulationEntry | null>(null)
   const [preventionMode, setPreventionMode] = useState<PreventionMode>('required-docs')
   const [rightsMode, setRightsMode] = useState<ConsumerRightsMode>('rights')
-  // Home의 은행 반박 예측/증거자료평가 버튼이 채워준다 — 상담 결과 화면이 어느 탭으로
+  // Home의 반박 예측/증거자료평가 버튼이 채워준다 — 상담 결과 화면이 어느 탭으로
   // 열려야 하는지, 제목은 뭐여야 하는지. 다른 진입 경로는 항상 focus 없이 startConsult를
   // 부르므로(아래) 자동으로 null로 리셋된다.
   const [resultFocus, setResultFocus] = useState<{ tab: ResultTabId; title: string } | null>(null)
@@ -171,7 +173,9 @@ function App() {
               setSimulationSession(null)
               nav.push('rights-simulation')
             }}
-            error={error} 
+            onNavigateToEvidenceEvaluation={() => nav.push('evidence-evaluation')}
+            onNavigateToComplaintDraft={() => nav.push('complaint-draft')}
+            error={error}
           />
         )}
         {nav.current === 'my-page' && (
@@ -188,11 +192,17 @@ function App() {
         {nav.current === 'consumer-rights' && <ConsumerRightsScreen onBack={nav.back} mode={rightsMode} />}
         {nav.current === 'prevention' && <PreventionScreen onBack={nav.back} mode={preventionMode} />}
         {nav.current === 'learning' && <LearningScreen onBack={nav.back} onStartConsult={startConsult} />}
+        {nav.current === 'evidence-evaluation' && <EvidenceEvaluationScreen onBack={nav.back} />}
+        {nav.current === 'complaint-draft' && <ComplaintDraftFormScreen onBack={nav.back} />}
         {nav.current === 'rights-simulation' && (
           <RightsSimulationScreen
             onBack={() => {
               setSimulationSession(null)
               nav.back()
+            }}
+            onGoToMyPage={() => {
+              setSimulationSession(null)
+              nav.replaceAll('my-page')
             }}
             context={{
               text: consultQuery || text,

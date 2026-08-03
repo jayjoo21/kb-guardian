@@ -27,9 +27,9 @@
   display: none;
 }
 
-/* Hide status and result when used in toolbar mode */
-.status,
-.statusError,
-.resultBox {
+/* 툴바 모드(ConsultInputScreen 내부)에서는 좁은 공간에 맞춰 판독 결과를 숨긴다 */
+.compact .status,
+.compact .statusError,
+.compact .resultBox {
   display: none;
 }

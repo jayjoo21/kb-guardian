@@ -81,3 +81,48 @@ export function buildComplaintDraft({ text, classified, evidence, procedure }: B
 
   return lines.join('\n')
 }
+
+export interface ManualDraftInput {
+  applicantName: string
+  applicantContact: string
+  respondentName: string
+  issueSummary: string
+  facts: string
+  desiredAmount: string
+}
+
+/** "신청서 자동 작성" 홈 버튼 전용 — AI 상담 없이 사용자가 직접 입력한 값만으로
+    조립한다. 상담 데이터가 없어 법조항·유사 결정례 절은 두지 않고, 입력하지 않은
+    값은 [ ]로 남긴다(지어내지 않는다). */
+export function buildManualComplaintDraft(input: ManualDraftInput): string {
+  const lines: string[] = []
+
+  lines.push('금융분쟁조정 신청서 (초안)')
+  lines.push(`작성일: ${TODAY()}`)
+  lines.push('')
+
+  lines.push('■ 신청인')
+  lines.push(`성명: ${input.applicantName || '[ ]'}`)
+  lines.push(`연락처: ${input.applicantContact || '[ ]'}`)
+  lines.push('')
+
+  lines.push('■ 피신청인')
+  lines.push(`금융회사명: ${input.respondentName || '[ ]'}`)
+  lines.push('')
+
+  lines.push('■ 신청 취지')
+  lines.push(
+    `피신청인의 ${input.issueSummary || '[ ]'} 관련 금융소비자보호법 위반 사실을 확인하고, 이로 인해 신청인이 입은 손해를 배상해 줄 것을 신청합니다. (배상 금액: ${input.desiredAmount || '[ ]'}원)`,
+  )
+  lines.push('')
+
+  lines.push('■ 사실관계')
+  lines.push(input.facts || '[ ]')
+  lines.push('')
+
+  lines.push(
+    '※ 위 내용은 입력하신 정보를 바탕으로 자동 생성된 초안입니다. [ ] 표시 부분은 직접 입력하셔야 하며, 제출 전 사실관계를 다시 확인하고 필요한 내용을 보완하시기 바랍니다.',
+  )
+
+  return lines.join('\n')
+}

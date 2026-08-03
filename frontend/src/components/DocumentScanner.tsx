@@ -33,9 +33,14 @@ function findings(result: DocumentScanResult): string[] {
   return out
 }
 
+interface DocumentScannerProps {
+  /** 좁은 툴바 안에 놓일 때(ConsultInputScreen) 판독 결과 표시를 생략한다. 기본은 결과를 보여준다. */
+  compact?: boolean
+}
+
 /** "관련 서류 사진 올리기" — 실제 Claude 비전 API로 서류를 판독한다(목업 아님).
     이미지에 없는 내용은 절대 지어내지 않고, 판독 불가면 그렇게 그대로 보여준다. */
-export function DocumentScanner() {
+export function DocumentScanner({ compact = false }: DocumentScannerProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [status, setStatus] = useState<Status>('idle')
   const [fileName, setFileName] = useState<string | null>(null)
@@ -61,7 +66,7 @@ export function DocumentScanner() {
   }
 
   return (
-    <div className={styles.wrap}>
+    <div className={`${styles.wrap} ${compact ? styles.compact : ''}`}>
       <button type="button" className={styles.trigger} onClick={() => inputRef.current?.click()}>
         <Camera size={16} strokeWidth={1.8} />
         관련 서류 사진 올리기

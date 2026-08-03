@@ -59,7 +59,7 @@ export function AIAssistantFloatingButton({
           '은행이 자주 내세우는 반박은 “고객이 직접 서명했다”, “설명을 충분히 받았다”는 식입니다. 현재 상황을 바탕으로 반박 포인트를 정리해 드릴게요.',
         source: '모의 응답',
         action: 'start_consult' as const,
-        action_data: '은행 반박 예측이 필요합니다. 현재 상황을 자세히 알려주세요.',
+        action_data: '반박 예측이 필요합니다. 현재 상황을 자세히 알려주세요.',
       }
     }
 

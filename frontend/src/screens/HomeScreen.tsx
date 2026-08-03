@@ -69,10 +69,12 @@ interface HomeScreenProps {
   onNavigateToPrevention?: (mode: PreventionMode) => void
   onNavigateToLearning?: () => void
   onNavigateToSimulation?: () => void
+  onNavigateToEvidenceEvaluation?: () => void
+  onNavigateToComplaintDraft?: () => void
   error?: string | null
 }
 
-export function HomeScreen({ onStartConsult, onNavigateToRights, onNavigateToStats, onNavigateToPrevention, onNavigateToLearning, onNavigateToSimulation, error = null }: HomeScreenProps) {
+export function HomeScreen({ onStartConsult, onNavigateToRights, onNavigateToStats, onNavigateToPrevention, onNavigateToLearning, onNavigateToSimulation, onNavigateToEvidenceEvaluation, onNavigateToComplaintDraft, error = null }: HomeScreenProps) {
   const [issueCounts, setIssueCounts] = useState<Record<string, number>>({})
   const [activeTab, setActiveTab] = useState<'prevention' | 'safety'>('prevention')
   const [isNotiOpen, setIsNotiOpen] = useState(false)
@@ -86,16 +88,13 @@ export function HomeScreen({ onStartConsult, onNavigateToRights, onNavigateToSta
         onNavigateToStats?.()
         break
       case 'bank-prediction':
-        onStartConsult('은행 반박 예측이 필요합니다. 현재 상황을 자세히 알려주세요.', {
+        onStartConsult('반박 예측이 필요합니다. 현재 상황을 자세히 알려주세요.', {
           tab: 'analysis',
-          title: '은행 반박 예측 결과',
+          title: '반박 예측 결과',
         })
         break
       case 'evidence-evaluation':
-        onStartConsult('제 증거 자료를 바탕으로 평가해 주세요.', {
-          tab: 'prepare',
-          title: '증거 자료 평가 결과',
-        })
+        onNavigateToEvidenceEvaluation?.()
         break
       case 'document-check':
         onNavigateToPrevention?.('required-docs')
@@ -104,7 +103,7 @@ export function HomeScreen({ onStartConsult, onNavigateToRights, onNavigateToSta
         onNavigateToPrevention?.('submit-check')
         break
       case 'auto-application':
-        onStartConsult('분쟁조정 신청서 초안이 필요합니다. 현재 상황을 설명해 주세요.')
+        onNavigateToComplaintDraft?.()
         break
       case 'dictionary':
         onNavigateToLearning?.()
@@ -142,7 +141,7 @@ export function HomeScreen({ onStartConsult, onNavigateToRights, onNavigateToSta
     },
     {
       id: 'bank-prediction',
-      label: '은행 반박 예측',
+      label: '반박 예측',
       icon: ShieldAlert,
       handler: () => handleFeatureAction('bank-prediction'),
     },

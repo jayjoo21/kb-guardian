@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
-import { ChevronDown, ChevronUp, Scale, FileText, Clock, CheckCircle, AlertCircle, Megaphone, BellRing, ExternalLink } from 'lucide-react'
+import { ChevronDown, ChevronUp, Scale, FileText, Clock, CheckCircle, AlertCircle, Megaphone, BellRing, BellPlus, ExternalLink } from 'lucide-react'
 import { TopAppBar } from '../app/TopAppBar'
 import { fetchConsumerRights, type ConsumerRight } from '../lib/api'
+import { loadRightsAlertSubscribed, setRightsAlertSubscribed } from '../lib/settings'
 import styles from './ConsumerRightsScreen.module.css'
 
 export type ConsumerRightsMode = 'rights' | 'report' | 'alert'
@@ -34,6 +35,13 @@ export function ConsumerRightsScreen({ onBack, mode }: ConsumerRightsScreenProps
   const [loading, setLoading] = useState(viewMode === 'rights')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [subscribed, setSubscribed] = useState(loadRightsAlertSubscribed)
+
+  function toggleSubscribe() {
+    const next = !subscribed
+    setSubscribed(next)
+    setRightsAlertSubscribed(next)
+  }
 
   useEffect(() => {
     if (viewMode !== 'rights') return
@@ -107,12 +115,21 @@ export function ConsumerRightsScreen({ onBack, mode }: ConsumerRightsScreenProps
             </div>
           ))}
         </div>
+        <button
+          type="button"
+          className={`${styles.subscribeButton} ${subscribed ? styles.subscribeButtonActive : ''}`}
+          onClick={toggleSubscribe}
+        >
+          {subscribed ? <CheckCircle size={16} /> : <BellPlus size={16} />}
+          {subscribed ? '알림 구독 중' : '알림 받기'}
+        </button>
         <button type="button" className={styles.linkButton} onClick={() => setViewMode('rights')}>
           금융소비자보호법상 내 권리 목록 보기
         </button>
         <footer className={styles.legalNotice}>
           <p className={styles.legalText}>
-            알림 발송 기능은 준비 중입니다. 어떤 소식을 받게 될지 미리 안내해 드려요.
+            알림 발송 기능은 준비 중입니다. 구독해 두시면 기능이 열릴 때 가장 먼저
+            안내해 드려요.
           </p>
         </footer>
       </div>

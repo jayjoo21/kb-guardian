@@ -7,6 +7,8 @@ import styles from './RightsSimulationScreen.module.css'
 
 interface RightsSimulationScreenProps {
   onBack?: () => void
+  /** 이미 저장된 상태에서 저장 버튼을 다시 누르면 마이페이지로 이동한다. */
+  onGoToMyPage?: () => void
   context?: {
     text?: string
     issues?: string[]
@@ -107,7 +109,7 @@ function buildFreeformReply(input: string) {
   }
 }
 
-export function RightsSimulationScreen({ onBack, context, initialSession }: RightsSimulationScreenProps) {
+export function RightsSimulationScreen({ onBack, onGoToMyPage, context, initialSession }: RightsSimulationScreenProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(() =>
     initialSession?.messages ?? [
       {
@@ -203,6 +205,10 @@ export function RightsSimulationScreen({ onBack, context, initialSession }: Righ
   }
 
   function handleSave() {
+    if (saveState === 'saved') {
+      onGoToMyPage?.()
+      return
+    }
     if (!summary) return
     const savedId = initialSession?.id
     saveSimulationEntry({

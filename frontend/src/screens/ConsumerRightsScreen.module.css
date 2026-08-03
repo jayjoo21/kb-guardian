@@ -2,6 +2,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0;
   gap: var(--space-section);
   padding: 0 var(--space-card) calc(var(--space-section) + 80px);
   background: var(--paper);
@@ -240,6 +241,25 @@
 
 .externalLink:hover {
   filter: brightness(0.96);
+}
+
+.subscribeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  background: var(--paper);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.subscribeButtonActive {
+  border-color: var(--kb-yellow);
+  background: var(--kb-yellow-soft);
 }
 
 .linkButton {

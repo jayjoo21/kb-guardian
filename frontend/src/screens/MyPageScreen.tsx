@@ -163,6 +163,8 @@ export function MyPageScreen({ onOpenEntry, onOpenSimulation, onOpenSimulationRe
         </button>
       </div>
 
+      <p className={styles.exampleNotice}>예시 데이터로 구성된 화면입니다. 실제 내 자산·이력과는 다를 수 있어요.</p>
+
       <section className={styles.heroCard}>
         <div className={styles.heroHeader}>
           <div>

@@ -35,7 +35,7 @@ interface ResultScreenProps {
   onAddIssue: (issue: string) => void
   /** 9-2 데이터 출처 카드 탭 → 통계 탭으로 이동 */
   onNavigateToStats: () => void
-  /** 은행 반박 예측/증거자료평가 등 홈의 특정 진입점에서 왔을 때 바로 열릴 탭.
+  /** 반박 예측/증거자료평가 등 홈의 특정 진입점에서 왔을 때 바로 열릴 탭.
       없으면 기본 'summary'. */
   initialTab?: ResultTabId
   /** 위 진입점 전용 제목. 없으면 기본 '상담 결과'. */
