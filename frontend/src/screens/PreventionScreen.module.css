@@ -488,6 +488,75 @@
   line-height: 1.5;
 }
 
+.externalLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  margin-top: var(--space-tight);
+  background: var(--kb-yellow-soft);
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.externalLink:hover {
+  filter: brightness(0.96);
+}
+
+.stepList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.stepItem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-element);
+  padding: var(--space-element) 0;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.stepItem:last-child {
+  border-bottom: none;
+}
+
+.stepNumber {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--kb-yellow);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.stepContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stepTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.stepDesc {
+  font-size: 12px;
+  color: var(--slate);
+  line-height: 1.4;
+}
+
 .legalNotice {
   padding: var(--space-section) var(--space-card) 0;
   margin-top: auto;

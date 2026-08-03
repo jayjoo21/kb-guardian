@@ -35,6 +35,11 @@ interface ResultScreenProps {
   onAddIssue: (issue: string) => void
   /** 9-2 데이터 출처 카드 탭 → 통계 탭으로 이동 */
   onNavigateToStats: () => void
+  /** 은행 반박 예측/증거자료평가 등 홈의 특정 진입점에서 왔을 때 바로 열릴 탭.
+      없으면 기본 'summary'. */
+  initialTab?: ResultTabId
+  /** 위 진입점 전용 제목. 없으면 기본 '상담 결과'. */
+  title?: string
 }
 
 /** 상담 결과 화면 — 이 앱의 핵심. 상단은 항상 보이는 요약 헤더(입력 상황·쟁점 칩),
@@ -54,9 +59,11 @@ export function ResultScreen({
   onReanalyze,
   onAddIssue,
   onNavigateToStats,
+  initialTab,
+  title,
 }: ResultScreenProps) {
   const [showIssuePicker, setShowIssuePicker] = useState(false)
-  const [activeTab, setActiveTab] = useState<ResultTabId>('summary')
+  const [activeTab, setActiveTab] = useState<ResultTabId>(initialTab ?? 'summary')
   const [possessedEvidence, setPossessedEvidence] = useState<string[]>(
     () => loadHistory().find((e) => e.id === historyEntryId)?.possessedEvidence ?? [],
   )
@@ -95,7 +102,7 @@ export function ResultScreen({
 
   return (
     <div className={styles.screen}>
-      <TopAppBar title="상담 결과" onBack={onBack} onHome={onHome} />
+      <TopAppBar title={title ?? '상담 결과'} onBack={onBack} onHome={onHome} />
       <div className={styles.body}>
         <TrustBadge />
 

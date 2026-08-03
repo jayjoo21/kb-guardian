@@ -1,12 +1,79 @@
 import { useState, useEffect } from 'react'
 import { TopAppBar } from '../app/TopAppBar'
-import { AlertTriangle, CheckCircle, FileText, Upload, AlertCircle, TrendingUp, Wallet, CreditCard, Landmark, Building2 } from 'lucide-react'
+import { AlertTriangle, CheckCircle, FileText, Upload, AlertCircle, TrendingUp, Wallet, CreditCard, Landmark, Building2, ExternalLink } from 'lucide-react'
 import { fetchProductStats, fetchProductDetail, analyzeRiskSignal, type ProductStat, type ProductDetail, type RiskSignalAnalysis } from '../lib/api'
 import styles from './PreventionScreen.module.css'
 
+export type PreventionMode = 'required-docs' | 'submit-check' | 'procedure'
+
 interface PreventionScreenProps {
   onBack: () => void
+  mode: PreventionMode
 }
+
+const FINE_URL = 'https://fine.fss.or.kr'
+
+const MODE_META: Record<PreventionMode, { headerTitle: string; badgeText: string; introTitle: string; introDesc: string }> = {
+  'required-docs': {
+    headerTitle: '예방 진단',
+    badgeText: '예방',
+    introTitle: '가입 전 확인하기',
+    introDesc: '과거 분쟁 사례를 바탕으로 가입 전 확인해야 할 핵심 사항을 안내해 드려요.',
+  },
+  'submit-check': {
+    headerTitle: '제출 서류 체크',
+    badgeText: '신청 준비',
+    introTitle: '분쟁조정 신청 서류 준비하기',
+    introDesc: '금융감독원에 분쟁조정을 신청할 때 필요한 서류를 미리 확인해 두면 절차가 빨라져요.',
+  },
+  procedure: {
+    headerTitle: '구제 절차 안내',
+    badgeText: '절차 안내',
+    introTitle: '분쟁조정 진행 절차',
+    introDesc: '민원 제기부터 조정안 수락까지, 실제로 어떤 순서로 진행되는지 안내해 드려요.',
+  },
+}
+
+const SUBMIT_CHECKLIST_ITEMS = [
+  {
+    id: 'application_form',
+    question: '분쟁조정 신청서를 작성하셨나요?',
+    description: '금융감독원 파인(fine.fss.or.kr)에서 온라인으로 작성할 수 있어요',
+  },
+  {
+    id: 'id_copy',
+    question: '신분증 사본을 준비하셨나요?',
+    description: '본인 확인용 서류입니다',
+  },
+  {
+    id: 'contract_copy',
+    question: '계약서·약관 사본이 있나요?',
+    description: '가입 당시 받은 서류 전체를 준비하세요',
+  },
+  {
+    id: 'evidence_materials',
+    question: '녹취·상담 기록 등 증거 자료를 정리하셨나요?',
+    description: '보유하고 있다면 함께 제출하면 유리해요',
+  },
+  {
+    id: 'damage_proof',
+    question: '손해 입증 자료(거래내역서 등)를 준비하셨나요?',
+    description: '손실 금액을 확인할 수 있는 자료가 필요해요',
+  },
+  {
+    id: 'complaint_result',
+    question: '금융회사에 낸 민원의 처리 결과 통지서가 있나요?',
+    description: '사전에 민원을 제기했다면 함께 제출하세요',
+  },
+]
+
+const PROCEDURE_STAGES = [
+  { step: 1, title: '금융회사에 민원 제기', desc: '먼저 가입한 금융회사 고객센터·영업점에 민원을 접수해요.' },
+  { step: 2, title: '금융감독원 분쟁조정 신청', desc: '민원으로 해결되지 않으면 금감원 파인(fine.fss.or.kr)에서 분쟁조정을 신청해요.' },
+  { step: 3, title: '사실조사 및 의견 조회', desc: '금감원이 양측 자료를 확인하고 당사자 의견을 들어요.' },
+  { step: 4, title: '분쟁조정위원회 심의', desc: '조정위원회가 사실관계를 바탕으로 조정안을 마련해요.' },
+  { step: 5, title: '조정안 제시 및 수락 여부 결정', desc: '양측이 조정안을 받아들이면 재판상 화해와 같은 효력이 생겨요.' },
+]
 
 // 상품 유형 목데이터
 const mockProducts: ProductStat[] = [
@@ -55,7 +122,7 @@ const CHECKLIST_ITEMS = [
   },
 ]
 
-export function PreventionScreen({ onBack }: PreventionScreenProps) {
+export function PreventionScreen({ onBack, mode }: PreventionScreenProps) {
   const [products, setProducts] = useState<ProductStat[]>([])
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null)
   const [productDetail, setProductDetail] = useState<ProductDetail | null>(null)
@@ -63,12 +130,15 @@ export function PreventionScreen({ onBack }: PreventionScreenProps) {
   const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set())
   const [riskAnalysis, setRiskAnalysis] = useState<RiskSignalAnalysis | null>(null)
   const [analyzingDocument, setAnalyzingDocument] = useState(false)
+  const [submitChecked, setSubmitChecked] = useState<Set<string>>(new Set())
+  const meta = MODE_META[mode]
 
   useEffect(() => {
+    if (mode !== 'required-docs') return
     // 목데이터 사용
     setProducts(mockProducts)
     setLoading(false)
-    
+
     // 실제 API 호출 시도
     fetchProductStats()
       .then((data) => {
@@ -120,6 +190,18 @@ export function PreventionScreen({ onBack }: PreventionScreenProps) {
     })
   }
 
+  function toggleSubmitItem(id: string) {
+    setSubmitChecked((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
   async function handleDocumentUpload(file: File) {
     setAnalyzingDocument(true)
     try {
@@ -134,20 +216,69 @@ export function PreventionScreen({ onBack }: PreventionScreenProps) {
 
   return (
     <div className={styles.screen}>
-      <TopAppBar title="예방 진단" onBack={onBack} />
-      
+      <TopAppBar title={meta.headerTitle} onBack={onBack} />
+
       <div className={styles.content}>
         <section className={styles.introSection}>
           <div className={styles.introBadge}>
             <AlertTriangle size={16} className={styles.introBadgeIcon} />
-            <span className={styles.introBadgeText}>예방</span>
+            <span className={styles.introBadgeText}>{meta.badgeText}</span>
           </div>
-          <h2 className={styles.introTitle}>가입 전 확인하기</h2>
-          <p className={styles.introDesc}>
-            과거 분쟁 사례를 바탕으로 가입 전 확인해야 할 핵심 사항을 안내해 드려요.
-          </p>
+          <h2 className={styles.introTitle}>{meta.introTitle}</h2>
+          <p className={styles.introDesc}>{meta.introDesc}</p>
         </section>
 
+        {mode === 'submit-check' && (
+          <section className={styles.checklistSection}>
+            <h3 className={styles.sectionTitle}>제출 서류 체크리스트</h3>
+            <div className={styles.checklist}>
+              {SUBMIT_CHECKLIST_ITEMS.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`${styles.checklistItem} ${submitChecked.has(item.id) ? styles.checked : ''}`}
+                  onClick={() => toggleSubmitItem(item.id)}
+                >
+                  <span className={styles.checklistIcon}>
+                    {submitChecked.has(item.id) ? <CheckCircle size={20} /> : <div className={styles.emptyCheck} />}
+                  </span>
+                  <div className={styles.checklistContent}>
+                    <span className={styles.checklistQuestion}>{item.question}</span>
+                    <span className={styles.checklistDescription}>{item.description}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <a href={FINE_URL} target="_blank" rel="noopener noreferrer" className={styles.externalLink}>
+              <ExternalLink size={14} aria-hidden="true" />
+              금융감독원 파인에서 분쟁조정 신청하기
+            </a>
+          </section>
+        )}
+
+        {mode === 'procedure' && (
+          <section className={styles.checklistSection}>
+            <h3 className={styles.sectionTitle}>분쟁조정 절차 5단계</h3>
+            <div className={styles.stepList}>
+              {PROCEDURE_STAGES.map((stage) => (
+                <div key={stage.step} className={styles.stepItem}>
+                  <span className={styles.stepNumber}>{stage.step}</span>
+                  <div className={styles.stepContent}>
+                    <span className={styles.stepTitle}>{stage.title}</span>
+                    <span className={styles.stepDesc}>{stage.desc}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <a href={FINE_URL} target="_blank" rel="noopener noreferrer" className={styles.externalLink}>
+              <ExternalLink size={14} aria-hidden="true" />
+              금융감독원 파인 바로가기
+            </a>
+          </section>
+        )}
+
+        {mode === 'required-docs' && (
+        <>
         <section className={styles.productSection}>
           <h3 className={styles.sectionTitle}>상품 유형 선택</h3>
           {loading ? (
@@ -309,6 +440,8 @@ export function PreventionScreen({ onBack }: PreventionScreenProps) {
               </p>
             </div>
           </section>
+        )}
+        </>
         )}
       </div>
 

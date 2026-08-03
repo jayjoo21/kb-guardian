@@ -18,6 +18,9 @@ import { PreventionScreen } from './screens/PreventionScreen'
 import { LearningScreen } from './screens/LearningScreen'
 import { RightsSimulationScreen } from './screens/RightsSimulationScreen'
 import { AIAssistantFloatingButton } from './components/AIAssistantFloatingButton'
+import { type ResultTabId } from './screens/result/ResultTabBar'
+import { type PreventionMode } from './screens/PreventionScreen'
+import { type ConsumerRightsMode } from './screens/ConsumerRightsScreen'
 import { type Classified, type Evidence, type Procedure } from './lib/api'
 import { isLoggedIn, logout } from './lib/auth'
 import { loadHistory, saveHistoryEntry, type ConsultHistoryEntry, type SavedSimulationEntry } from './lib/history'
@@ -33,6 +36,12 @@ function App() {
   const [, setAnswerDone] = useState(false)
   const [error] = useState<string | null>(null)
   const [simulationSession, setSimulationSession] = useState<SavedSimulationEntry | null>(null)
+  const [preventionMode, setPreventionMode] = useState<PreventionMode>('required-docs')
+  const [rightsMode, setRightsMode] = useState<ConsumerRightsMode>('rights')
+  // Home의 은행 반박 예측/증거자료평가 버튼이 채워준다 — 상담 결과 화면이 어느 탭으로
+  // 열려야 하는지, 제목은 뭐여야 하는지. 다른 진입 경로는 항상 focus 없이 startConsult를
+  // 부르므로(아래) 자동으로 null로 리셋된다.
+  const [resultFocus, setResultFocus] = useState<{ tab: ResultTabId; title: string } | null>(null)
   // 8-1/8-2용 — 지금 result에 표시 중인 상담의 이력 id(자가보고 상태를 이 항목에
   // 이어 붙이거나, "지난 상담과 비교"에서 자기 자신을 제외하는 데 쓴다).
   const [historyEntryId, setHistoryEntryId] = useState<string | null>(null)
@@ -54,7 +63,8 @@ function App() {
     [],
   )
 
-  function startConsult(input: string) {
+  function startConsult(input: string, focus?: { tab: ResultTabId; title: string }) {
+    setResultFocus(focus ?? null)
     setText(input)
     setConsultQuery(input)
     if (input) {
@@ -101,6 +111,7 @@ function App() {
   function viewHistoryEntry(entry: ConsultHistoryEntry) {
     controllerRef.current?.abort()
     clearNavTimeout()
+    setResultFocus(null)
     setText(entry.text)
     setConsultQuery(entry.text)
     setClassified(entry.classified)
@@ -144,11 +155,17 @@ function App() {
           <SignupScreen onBack={nav.back} onSignedUp={() => nav.replaceAll('home')} />
         )}
         {nav.current === 'home' && (
-          <HomeScreen 
-            onStartConsult={startConsult} 
-            onNavigateToRights={() => nav.push('consumer-rights')}
-            onNavigateToStats={() => nav.replaceAll('stats')}
-            onNavigateToPrevention={() => nav.push('prevention')}
+          <HomeScreen
+            onStartConsult={startConsult}
+            onNavigateToRights={(mode) => {
+              setRightsMode(mode)
+              nav.push('consumer-rights')
+            }}
+            onNavigateToStats={() => nav.push('stats')}
+            onNavigateToPrevention={(mode) => {
+              setPreventionMode(mode)
+              nav.push('prevention')
+            }}
             onNavigateToLearning={() => nav.push('learning')}
             onNavigateToSimulation={() => {
               setSimulationSession(null)
@@ -168,8 +185,8 @@ function App() {
         )}
         {nav.current === 'settings' && <SettingsScreen onBack={nav.back} onLogout={handleLogout} />}
         {nav.current === 'stats' && <StatsScreen onBack={nav.back} />}
-        {nav.current === 'consumer-rights' && <ConsumerRightsScreen onBack={nav.back} />}
-        {nav.current === 'prevention' && <PreventionScreen onBack={nav.back} />}
+        {nav.current === 'consumer-rights' && <ConsumerRightsScreen onBack={nav.back} mode={rightsMode} />}
+        {nav.current === 'prevention' && <PreventionScreen onBack={nav.back} mode={preventionMode} />}
         {nav.current === 'learning' && <LearningScreen onBack={nav.back} onStartConsult={startConsult} />}
         {nav.current === 'rights-simulation' && (
           <RightsSimulationScreen
@@ -232,7 +249,9 @@ function App() {
             onHome={goHome}
             onReanalyze={reanalyzeWithIssue}
             onAddIssue={addIssueAndReanalyze}
-            onNavigateToStats={() => nav.replaceAll('stats')}
+            onNavigateToStats={() => nav.push('stats')}
+            initialTab={resultFocus?.tab}
+            title={resultFocus?.title}
           />
         )}
       </ScreenTransition>

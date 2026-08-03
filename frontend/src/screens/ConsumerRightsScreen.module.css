@@ -214,6 +214,46 @@
   line-height: 1.5;
 }
 
+.guideCard {
+  padding: var(--space-element);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.externalLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  background: var(--kb-yellow-soft);
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.externalLink:hover {
+  filter: brightness(0.96);
+}
+
+.linkButton {
+  padding: var(--space-tight) 0;
+  border: none;
+  background: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--slate);
+  text-decoration: underline;
+  cursor: pointer;
+  text-align: center;
+}
+
 .legalNotice {
   padding: var(--space-section) var(--space-card) 0;
   margin-top: auto;

@@ -5,6 +5,9 @@ import {
   MessageSquareWarning, ShieldAlert, CheckSquare, PenTool, type LucideIcon,
 } from 'lucide-react'
 import { fetchStats } from '../lib/api'
+import { type PreventionMode } from './PreventionScreen'
+import { type ConsumerRightsMode } from './ConsumerRightsScreen'
+import { type ResultTabId } from './result/ResultTabBar'
 import styles from './HomeScreen.module.css'
 
 interface IssueCard {
@@ -60,10 +63,10 @@ interface QuickMenuItem {
 }
 
 interface HomeScreenProps {
-  onStartConsult: (text: string) => void
-  onNavigateToRights?: () => void
+  onStartConsult: (text: string, focus?: { tab: ResultTabId; title: string }) => void
+  onNavigateToRights?: (mode: ConsumerRightsMode) => void
   onNavigateToStats?: () => void
-  onNavigateToPrevention?: () => void
+  onNavigateToPrevention?: (mode: PreventionMode) => void
   onNavigateToLearning?: () => void
   onNavigateToSimulation?: () => void
   error?: string | null
@@ -83,13 +86,22 @@ export function HomeScreen({ onStartConsult, onNavigateToRights, onNavigateToSta
         onNavigateToStats?.()
         break
       case 'bank-prediction':
-        onStartConsult('은행 반박 예측이 필요합니다. 현재 상황을 자세히 알려주세요.')
+        onStartConsult('은행 반박 예측이 필요합니다. 현재 상황을 자세히 알려주세요.', {
+          tab: 'analysis',
+          title: '은행 반박 예측 결과',
+        })
         break
       case 'evidence-evaluation':
-        onStartConsult('제 증거 자료를 바탕으로 평가해 주세요.')
+        onStartConsult('제 증거 자료를 바탕으로 평가해 주세요.', {
+          tab: 'prepare',
+          title: '증거 자료 평가 결과',
+        })
         break
       case 'document-check':
-        onNavigateToPrevention?.()
+        onNavigateToPrevention?.('required-docs')
+        break
+      case 'submit-check':
+        onNavigateToPrevention?.('submit-check')
         break
       case 'auto-application':
         onStartConsult('분쟁조정 신청서 초안이 필요합니다. 현재 상황을 설명해 주세요.')
@@ -98,16 +110,16 @@ export function HomeScreen({ onStartConsult, onNavigateToRights, onNavigateToSta
         onNavigateToLearning?.()
         break
       case 'procedure':
-        onNavigateToPrevention?.()
+        onNavigateToPrevention?.('procedure')
         break
       case 'report':
-        onNavigateToRights?.()
+        onNavigateToRights?.('report')
         break
       case 'simulation':
         onNavigateToSimulation?.()
         break
       case 'rights-alert':
-        onNavigateToRights?.()
+        onNavigateToRights?.('alert')
         break
       default:
         onStartConsult('')
@@ -141,10 +153,10 @@ export function HomeScreen({ onStartConsult, onNavigateToRights, onNavigateToSta
       handler: () => handleFeatureAction('evidence-evaluation'),
     },
     {
-      id: 'document-check',
+      id: 'submit-check',
       label: '제출 서류 체크',
       icon: CheckSquare,
-      handler: () => handleFeatureAction('document-check'),
+      handler: () => handleFeatureAction('submit-check'),
     },
     {
       id: 'auto-application',
